@@ -8,8 +8,8 @@ import {
 } from "lucide-react";
 import React, { useState, useRef, useEffect } from "react";
 import ChildCard from "./ChildCard";
-import apiHelper from "../Helper/api-helper";
-import DEVELOPMENT_CONFIG from "../Helper/config";
+import apiHelper from "../helpers/api-helper";
+import DEVELOPMENT_CONFIG from "../helpers/config";
 
 export default function TaskCard({ id, title }) {
   const [isClose, setIsClose] = useState(true);

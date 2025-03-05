@@ -11,8 +11,8 @@ import {
     UsersRound,
     X,
 } from "lucide-react";
-import apiHelper from "../Helper/api-helper";
-import DEVELOPMENT_CONFIG from "../Helper/config";
+import apiHelper from "../helpers/api-helper";
+import DEVELOPMENT_CONFIG from "../helpers/config";
 import { useIndexContext } from "../context/IndexContext";
 
 export default function Dashbord() {

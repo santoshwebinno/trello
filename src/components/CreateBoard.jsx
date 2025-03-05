@@ -3,8 +3,8 @@ import Box from "@mui/material/Box";
 import Modal from "@mui/material/Modal";
 import { ChevronDown, X } from "lucide-react";
 import { Link } from "react-router-dom";
-import apiHelper from "../Helper/api-helper";
-import DEVELOPMENT_CONFIG from "../Helper/config";
+import apiHelper from "../helpers/api-helper";
+import DEVELOPMENT_CONFIG from "../helpers/config";
 
 const style = {
   position: "absolute",

@@ -14,8 +14,8 @@ import {
 } from "lucide-react";
 import CreateBoard from "./CreateBoard";
 import CloseBoard from "./CloseBoard";
-import apiHelper from "../Helper/api-helper";
-import DEVELOPMENT_CONFIG from "../Helper/config";
+import apiHelper from "../helpers/api-helper";
+import DEVELOPMENT_CONFIG from "../helpers/config";
 import { useIndexContext } from "../context/IndexContext";
 import InviteMembers from "./InviteMembers";
 import LogIn from "./LogIn";

@@ -1,7 +1,7 @@
 import { FilePenLine } from 'lucide-react';
 import React, { useEffect, useState } from 'react'
-import apiHelper from '../Helper/api-helper';
-import DEVELOPMENT_CONFIG from '../Helper/config';
+import apiHelper from '../helpers/api-helper';
+import DEVELOPMENT_CONFIG from '../helpers/config';
 
 export default function ChildCard({ id, cardTitle, setIsCheckedC }) {
     const [isChecked, setIsChecked] = useState(false);
