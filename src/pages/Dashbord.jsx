@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import TaskCard from "../components/TaskCard";
 import {
     CalendarDays,
@@ -14,6 +14,7 @@ import {
 import apiHelper from "../helpers/api-helper";
 import DEVELOPMENT_CONFIG from "../helpers/config";
 import { useIndexContext } from "../context/IndexContext";
+import { DndContext } from "@dnd-kit/core";
 
 export default function Dashbord() {
     const [newListCard, setNewListCard] = useState(false);
@@ -29,9 +30,10 @@ export default function Dashbord() {
         setNewListCard(false);
     };
 
-    // DISPLAY BOARD DATA 2 ( TASK CARD, CHILD CARD)
+    // DISPLAY BOARD DATA 2 ( TASK CARD WITH CHILD CARD)
     const handleOnDashbord2 = (async (id) => {
-        let result = await apiHelper.getRequest(`display-dashbord-card?id=${id}`)
+        localStorage.setItem("dashbordCID", id)
+        let result = await apiHelper.getRequest(`display-dashbord-card?d_c_id=${id}`)
         if (result?.code === DEVELOPMENT_CONFIG.statusCode) {
             setDashbordDataObj(result?.body)
         }
@@ -67,6 +69,33 @@ export default function Dashbord() {
             console.log("MESSAGE ELSE : ", result.message)
         }
     }
+
+    // DREAG AND DROP HANDLE
+    const handleDragEnd = useCallback(async (event) => {
+        console.log("=======================>>>>>>>>>>>");
+        const { active, over } = event;
+
+        if (!over) return;
+
+        const taskId = active.id;
+        const newStatus = over.id;
+
+        console.log("taskId-child, newStatus-dachbord-card ", taskId, newStatus);
+
+        // UPDATE PARENT OF CHILD CARD
+        const data = JSON.stringify({
+            id: taskId,
+            dashbord_c_id: newStatus,
+        });
+        let result = await apiHelper.postRequest("update-child-card", data);
+        if (result?.code === DEVELOPMENT_CONFIG.statusCode) {
+            // UPDATE CONTENT
+            // handleOnDashbord2(dashbordDataObj?.id);
+            console.log("MESSAGE IF : ", result?.message);
+        } else {
+            console.log("MESSAGE ELSE : ", result?.message);
+        }
+    }, [])
 
     return (
         <>
@@ -116,13 +145,16 @@ export default function Dashbord() {
                 {/* CONTENT */}
 
                 <div className="flex gap-4 mt-16 p-3 whitespace-nowrap scrollbar-hide w-fit ">
-                    {!!dashbordDataObj && dashbordDataObj?.dashbord_cards?.map((value) => (
-                        <TaskCard
-                            key={value.id}
-                            id={value.id}
-                            title={value.title}
-                        />
-                    ))}
+                    <DndContext onDragEnd={handleDragEnd}>
+                        {!!dashbordDataObj && dashbordDataObj?.dashbord_cards?.map((value) => (
+                            <TaskCard
+                                key={value.id}
+                                id={value.id}
+                                values={value}
+                            />
+                        ))}
+                    </DndContext>
+
                     {dashbordDataObj.id && (
                         <>
                             {
@@ -168,7 +200,6 @@ export default function Dashbord() {
                                 )}
                         </>
                     )}
-
 
                 </div>
             </div >

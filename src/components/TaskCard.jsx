@@ -10,9 +10,10 @@ import React, { useState, useRef, useEffect } from "react";
 import ChildCard from "./ChildCard";
 import apiHelper from "../helpers/api-helper";
 import DEVELOPMENT_CONFIG from "../helpers/config";
+import { useDroppable } from "@dnd-kit/core";
 
-export default function TaskCard({ id, title }) {
-  const [isClose, setIsClose] = useState(true);
+export default function TaskCard({ id, values }) {
+  const [isClose, setIsClose] = useState(false);
 
   const [addCard, setAddCard] = useState(false);
 
@@ -33,7 +34,7 @@ export default function TaskCard({ id, title }) {
   const [childCard, setChildCard] = useState([]);
 
   // GET CHILD CARDS
-  async function handleGetChildCard(id) {
+  async function getChildCard(id) {
     let result = await apiHelper.getRequest(`display-child-cards?id=${id}`)
     if (result?.code === DEVELOPMENT_CONFIG.statusCode) {
       setChildCard(result?.body)
@@ -42,7 +43,8 @@ export default function TaskCard({ id, title }) {
     }
   }
   useEffect(() => {
-    handleGetChildCard(id);
+    // setIsClose(values?.is_close)
+    getChildCard(id);
   }, [])
 
   const handleValidation = () => {
@@ -69,7 +71,7 @@ export default function TaskCard({ id, title }) {
     if (result?.code === DEVELOPMENT_CONFIG.statusCode) {
       handleCloseAddCard()
       setNewValue("")
-      handleGetChildCard(id) // UPDATE CONTENT
+      getChildCard(id) // UPDATE CONTENT
       console.log("MESSAGE IF : ", result.message)
     }
     else {
@@ -77,22 +79,43 @@ export default function TaskCard({ id, title }) {
     }
   }
 
+  // HANDLE MIN AOR MAX
+  async function handleUpdateMinMax(e) {
+    e.preventDefault();
+    const newStatus = !isClose
+    setIsClose(newStatus)
+    // let data = JSON.stringify({
+    //   id,
+    //   newStatus
+    // })
+    // let result = await apiHelper.postRequest("min-max", data)
+    // if (result?.code === DEVELOPMENT_CONFIG.statusCode) {
+    //   setIsClose(newStatus)
+    //   console.log("MESSAGE IF : ", result.message)
+    // }
+    // else {
+    //   console.log("MESSAGE ELSE : ", result.message)
+    // }
+  }
+
   const scrollRef = useRef(null);
+  const { setNodeRef } = useDroppable({ id })
   return (
     <>
-      {isClose ? (
+      {!isClose ? (
         <div
           key={id}
+          ref={setNodeRef}
           className="bg-white text-gray-600 font-medium p-3 cursor-pointer min-w-72 rounded-xl shadow-md flex flex-col space-y-2"
         >
           <div className="flex items-start justify-between gap-2 pb-2 mb-1">
             <h2 className="text-sm font-semibold flex-1 w-3/4 break-words whitespace-normal">
-              {title}
+              {values.title}
             </h2>
             <div className="flex items-center gap-4">
               <button
                 className="cursor-pointer"
-                onClick={() => setIsClose(false)}
+                onClick={(e) => handleUpdateMinMax(e)}
               >
                 <Minimize2 size={16} strokeWidth={2.5} className="rotate-45" />
               </button>
@@ -106,7 +129,10 @@ export default function TaskCard({ id, title }) {
             ref={scrollRef}
             className="pb-1 mb-1 flex-1 overflow-y-auto max-h-96"
           >
-            <div className="space-y-3 p-1">
+            <div
+              // ref={setNodeRef}
+              className="space-y-3 p-1"
+            >
               {childCard && (
                 <>
                   {childCard?.child_cards?.map((item) => (
@@ -174,15 +200,15 @@ export default function TaskCard({ id, title }) {
         </div>
       ) : (
         <div
-          key={title}
+          key={values.title}
           className="cursor-pointer flex flex-col items-center bg-white text-gray-600 rounded-xl px-3 py-2 w-10 h-fit space-y-2"
         >
-          <button className="" onClick={() => setIsClose(true)}>
+          <button className="" onClick={(e) => handleUpdateMinMax(e)}>
             <Maximize2 size={16} strokeWidth={2.5} className="rotate-45" />
           </button>
           <div className="flex items-center gap-2 rotate-0 writing-vertical-lr">
-            <h2 className="text-sm font-semibold">{title}</h2>
-            <span className="text-xs mt-1">5</span>
+            <h2 className="text-sm font-semibold">{values.title}</h2>
+            {/* <span className="text-xs mt-1">5</span> */}
           </div>
         </div>
       )}

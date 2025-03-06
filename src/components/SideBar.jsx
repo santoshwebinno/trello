@@ -23,11 +23,23 @@ import LogIn from "./LogIn";
 export default function SideBar() {
   const { setDashbordDataObj } = useIndexContext()
 
+  let isLogin = localStorage.getItem("token")
+  let dashbordCID = parseInt(localStorage.getItem("dashbordCID"), 10);
+
+  if (!isLogin) {
+    localStorage.removeItem("dashbordCID");
+  }
+  // console.log(`<<<<< ${isLogin} >>>>>`)
+
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
 
   // OPEN CREATE BOARD
   const [openCreateBoard, setOpenCreateBoard] = useState(false);
-  const handleOpenCreateBoard = () => setOpenCreateBoard(true);
+  const handleOpenCreateBoard = () => {
+    if (!!isLogin) {
+      setOpenCreateBoard(true)
+    }
+  }
 
   const [yourBoard, setYourBoard] = useState(false);
   const [openBoard, setOpenBoard] = useState(false);
@@ -39,38 +51,49 @@ export default function SideBar() {
 
   // OPEN YOUR BOARD ( FOR SORTING )
   const handleOpenYourBoard = () => {
-    setYourBoard(true);
-    setRemoveBoard(false);
+    if (!!isLogin) {
+      setYourBoard(true);
+      setRemoveBoard(false);
+    }
   };
-
-  // OPEN BOARD ( LIST )
+  // OPEN BOARD ( LIST OF BOARDS )
   const handleOpenBoard = (e, id, title) => {
     e.stopPropagation();
-    setBoardTitle({ id, title })
-    setOpenBoard(true);
-    setRemoveBoard(true);
+    if (!!isLogin) {
+      setBoardTitle({ id, title })
+      setOpenBoard(true);
+      setRemoveBoard(true);
+    }
   };
 
   const [boardData, setBoardData] = useState([])
 
-  // GET BOARDS
+  // GET BOARDS WHEN USER IS LOGED IN
   async function getBoards() {
     let result = await apiHelper.getRequest("get-boards")
     if (result?.code === DEVELOPMENT_CONFIG.statusCode) {
       setBoardData(result?.body)
       if (result.body?.length > 0)
-        handleOnDashbord(result?.body[0]?.id)
+        if (dashbordCID) {
+          handleOnDashbord(dashbordCID)
+        }
+        else {
+          handleOnDashbord(result?.body[0]?.id)
+        }
     } else {
       setBoardData([])
     }
   }
   useEffect(() => {
-    getBoards()
+    if (!!isLogin) {
+      getBoards()
+    }
   }, [])
 
   // DISPLAY BOARD DATA ( TASK CARD, CHILD CARD)
   const handleOnDashbord = (async (id) => {
-    let result = await apiHelper.getRequest(`display-dashbord-card?id=${id}`)
+    localStorage.setItem("dashbordCID", id)
+    let result = await apiHelper.getRequest(`display-dashbord-card?d_c_id=${id}`)
     if (result?.code === DEVELOPMENT_CONFIG.statusCode) {
       setDashbordDataObj(result?.body)
     }
@@ -81,12 +104,16 @@ export default function SideBar() {
 
   const [openInvite, setOpenInvite] = useState(false);
   const handleOpenInvite = () => {
-    setOpenInvite(true);
+    if (!!isLogin && !!dashbordCID) {
+      setOpenInvite(true);
+    }
   };
 
   const [openLogin, setOpenLogin] = useState(false);
   const handleOpenLogin = () => {
-    setOpenLogin(true);
+    if (!isLogin) {
+      setOpenLogin(true);
+    }
   };
 
   const board_title = { title: "Your Boards" }
@@ -255,9 +282,13 @@ export default function SideBar() {
                     <p>
                       You do not have any boards
                     </p>
-                    <button className="w-full bg-gray-400 py-1 rounded mt-2 hover:bg-gray-500"
-                      onClick={handleOpenLogin}
-                    >Log In </button>
+                    {!isLogin &&
+                      <button className="w-full bg-gray-400 py-1 rounded mt-2 hover:bg-gray-500"
+                        onClick={handleOpenLogin}
+                      >
+                        Log In
+                      </button>
+                    }
                   </div>
                 </>
               )}
@@ -267,11 +298,11 @@ export default function SideBar() {
         )}
       </div>
 
-      <CreateBoard open={openCreateBoard} setOpen={setOpenCreateBoard} getBoards={getBoards} />
+      <CreateBoard open={openCreateBoard} setOpen={setOpenCreateBoard} getBoards={getBoards} handleOnDashbord={handleOnDashbord} />
       <CloseBoard boardTitle={board_title} open={yourBoard} setOpen={setYourBoard} removeBoard={removeBoard} />
       <CloseBoard boardTitle={boardTitle} open={openBoard} setOpen={setOpenBoard} removeBoard={removeBoard} />
       <InviteMembers openInvite={openInvite} setOpenInvite={setOpenInvite} />
-      <LogIn openLogin={openLogin} setOpenLogin={setOpenLogin} />
+      <LogIn openLogin={openLogin} setOpenLogin={setOpenLogin} getBoards={getBoards} />
     </>
   );
 }

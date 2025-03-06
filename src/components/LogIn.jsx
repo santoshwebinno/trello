@@ -4,8 +4,6 @@ import Modal from "@mui/material/Modal";
 import { X } from "lucide-react";
 import apiHelper from "../helpers/api-helper";
 import DEVELOPMENT_CONFIG from "../helpers/config";
-import { useNavigate } from 'react-router-dom';
-
 
 const style = {
     position: "absolute",
@@ -17,16 +15,19 @@ const style = {
     p: 2,
 };
 
-export default function LogIn({ openLogin, setOpenLogin }) {
+export default function LogIn({ openLogin, setOpenLogin, getBoards }) {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [error, setError] = useState("");
-    const navigate = useNavigate()
 
     const handleClose = () => {
         setOpenLogin(false);
+        setEmail("");
+        setPassword("");
+        setError("");
     };
 
+    // LOGIN USER
     const handleSubmit = (async (e) => {
         e.preventDefault();
         if (!email || !password) {
@@ -40,17 +41,18 @@ export default function LogIn({ openLogin, setOpenLogin }) {
         })
         let result = await apiHelper.postRequest("log-in", data)
         if (result?.code === DEVELOPMENT_CONFIG.statusCode) {
-            console.log("=========> result", result)
             localStorage.setItem("token", result?.body?.token);
-            handleClose()
-            if (result.body.token) {
-                navigate("/")
-            }
+            handleClose();
+            getBoards(); // UPDATE BOARD AND DASHBORD DATA
+            console.log("MESAGE IF : ", result?.message)
         }
         else {
             console.log("MESAGE ELSE : ", result?.message)
+            setError(result?.message)
         }
     })
+
+
     return (
         <div>
             <Modal

@@ -16,7 +16,7 @@ const style = {
   p: 2,
 };
 
-export default function CreateBoard({ open, setOpen, getBoards }) {
+export default function CreateBoard({ open, setOpen, getBoards, handleOnDashbord }) {
   const [boardTitle, setBoardTitle] = useState("");
   const [background, setBackground] = useState("#d946ef");
   const [visibility, setVisibility] = useState("Workspace");
@@ -59,9 +59,11 @@ export default function CreateBoard({ open, setOpen, getBoards }) {
     if (result?.code === DEVELOPMENT_CONFIG.statusCode) {
       handleClose()
       handleReset()
-      getBoards() // UPDATE CONTENT
-      console.log("MESSAGE IF : ", result.message)
+      getBoards() // UPDATE CONTENT ( Sidebar )
+      handleOnDashbord(result?.body?.id) // UPDATE CONTENT ( Deshbord )
+      localStorage.setItem("dashbordCID", result?.body?.id)
       // then make this checked default
+      console.log("MESSAGE IF : ", result.message, result?.body)
     } else {
       console.log("MESSAGE ELSE : ", result.message)
     }
