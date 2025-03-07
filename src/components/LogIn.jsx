@@ -45,8 +45,7 @@ export default function LogIn({ openLogin, setOpenLogin, getBoards }) {
             handleClose();
             getBoards(); // UPDATE BOARD AND DASHBORD DATA
             console.log("MESAGE IF : ", result?.message)
-        }
-        else {
+        } else {
             console.log("MESAGE ELSE : ", result?.message)
             setError(result?.message)
         }

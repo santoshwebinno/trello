@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useState } from "react";
 import TaskCard from "../components/TaskCard";
 import {
     CalendarDays,
@@ -15,12 +15,13 @@ import apiHelper from "../helpers/api-helper";
 import DEVELOPMENT_CONFIG from "../helpers/config";
 import { useIndexContext } from "../context/IndexContext";
 import { DndContext } from "@dnd-kit/core";
+import Description from "../components/Description";
 
 export default function Dashbord() {
     const [newListCard, setNewListCard] = useState(false);
     const [newListTitle, setNewListTitle] = useState("");
 
-    const { dashbordDataObj, setDashbordDataObj } = useIndexContext();
+    const { dashbordDataObj, setDashbordDataObj, handleOnDashbord } = useIndexContext();
 
     // OPEN AND CLOSE ADD LIST
     const handleNewListCardOpen = () => {
@@ -30,17 +31,18 @@ export default function Dashbord() {
         setNewListCard(false);
     };
 
-    // DISPLAY BOARD DATA 2 ( TASK CARD WITH CHILD CARD)
-    const handleOnDashbord2 = (async (id) => {
-        localStorage.setItem("dashbordCID", id)
-        let result = await apiHelper.getRequest(`display-dashbord-card?d_c_id=${id}`)
-        if (result?.code === DEVELOPMENT_CONFIG.statusCode) {
-            setDashbordDataObj(result?.body)
-        }
-        else {
-            setDashbordDataObj({})
-        }
-    })
+    // DISPLAY BOARD DATA 2 ( TASK CARD WITH CHILD CARD )
+    // const handleOnDashbord2 = (async (id) => {
+    //     console.log("Enter in handle===========OnDashbord2")
+    //     localStorage.setItem("dashbordCID", id)
+    //     let result = await apiHelper.getRequest(`display-board?b_id=${id}`)
+    //     if (result?.code === DEVELOPMENT_CONFIG.statusCode) {
+    //         setDashbordDataObj(result?.body)
+    //     }
+    //     else {
+    //         setDashbordDataObj({})
+    //     }
+    // })
 
     const handleValidation = () => {
         let isValid = true
@@ -57,13 +59,13 @@ export default function Dashbord() {
         }
         let data = JSON.stringify({
             title: newListTitle,
-            board_id: dashbordDataObj?.id
+            board_id: dashbordDataObj?.id // OR FROM LS
         })
         let result = await apiHelper.postRequest("create-dashbord-card", data)
         if (result?.code === DEVELOPMENT_CONFIG.statusCode) {
             handleNewListCardClose()
             setNewListTitle("")
-            handleOnDashbord2(dashbordDataObj?.id) // UPDATE CONTENT
+            handleOnDashbord(dashbordDataObj?.id) // UPDATE CONTENT
             console.log("MESSAGE IF : ", result.message)
         } else {
             console.log("MESSAGE ELSE : ", result.message)
@@ -90,12 +92,40 @@ export default function Dashbord() {
         let result = await apiHelper.postRequest("update-child-card", data);
         if (result?.code === DEVELOPMENT_CONFIG.statusCode) {
             // UPDATE CONTENT
-            // handleOnDashbord2(dashbordDataObj?.id);
+            handleOnDashbord(dashbordDataObj?.id)
+
+            // setDashbordDataObj((prevState) => {
+            //     const updatedCards = prevState.dashbord_cards.map((card) => {
+            //         console.log("card+++++++++++++", card);
+
+            //         if (card.id === newStatus) {
+            //             console.log("enter in 11111111111111111")
+            //             return {
+            //                 ...card,
+            //                 //   childCards: [...card.childCards, { id: taskId }],
+            //             };
+            //         }
+            //         //   if (card.childCards.some((child) => child.id === taskId)) {
+            //         //     return {
+            //         //       ...card,
+            //         //       childCards: card.childCards.filter(
+            //         //         (child) => child.id !== taskId
+            //         //       ),
+            //         //     };
+            //         //   }
+            //         return card;
+            //     });
+
+            //     return { ...prevState, dashbord_cards: updatedCards };
+            // });
+
             console.log("MESSAGE IF : ", result?.message);
         } else {
             console.log("MESSAGE ELSE : ", result?.message);
         }
-    }, [])
+    }, [dashbordDataObj])
+
+    console.log("dashbordDataObj", dashbordDataObj)
 
     return (
         <>
@@ -203,6 +233,8 @@ export default function Dashbord() {
 
                 </div>
             </div >
+
+            <Description />
         </>
     );
 }

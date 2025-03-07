@@ -31,21 +31,20 @@ export default function TaskCard({ id, values }) {
   }
 
   const [newValue, setNewValue] = useState("")
-  const [childCard, setChildCard] = useState([]);
+  const [childCard, setChildCard] = useState({});
 
-  // GET CHILD CARDS
-  async function getChildCard(id) {
-    let result = await apiHelper.getRequest(`display-child-cards?id=${id}`)
+  // GET CHILD CARDS ( WHEN NEW CARD IS CREATED )
+  async function displayDashbordCard(id) {
+    let result = await apiHelper.getRequest(`display-dashbord-card?id=${id}`)
     if (result?.code === DEVELOPMENT_CONFIG.statusCode) {
       setChildCard(result?.body)
     } else {
-      setChildCard([])
+      setChildCard({})
     }
   }
   useEffect(() => {
-    // setIsClose(values?.is_close)
-    getChildCard(id);
-  }, [])
+    setChildCard(values)
+  }, [values])
 
   const handleValidation = () => {
     let isValid = true
@@ -71,7 +70,8 @@ export default function TaskCard({ id, values }) {
     if (result?.code === DEVELOPMENT_CONFIG.statusCode) {
       handleCloseAddCard()
       setNewValue("")
-      getChildCard(id) // UPDATE CONTENT
+      displayDashbordCard(id) // UPDATE CONTENT
+      // OR Update setDashbordDataObj state
       console.log("MESSAGE IF : ", result.message)
     }
     else {
@@ -79,7 +79,7 @@ export default function TaskCard({ id, values }) {
     }
   }
 
-  // HANDLE MIN AOR MAX
+  // HANDLE MIN OR MAX
   async function handleUpdateMinMax(e) {
     e.preventDefault();
     const newStatus = !isClose
@@ -139,8 +139,8 @@ export default function TaskCard({ id, values }) {
                     <ChildCard
                       key={item.id}
                       id={item.id}
-                      cardTitle={item.title}
-                      setIsCheckedC={item.is_checked}
+                      cardValues={item}
+                      displayDashbordCard={displayDashbordCard}
                     />
                   ))
                   }

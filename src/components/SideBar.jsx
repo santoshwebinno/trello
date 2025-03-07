@@ -21,17 +21,24 @@ import InviteMembers from "./InviteMembers";
 import LogIn from "./LogIn";
 
 export default function SideBar() {
-  const { setDashbordDataObj } = useIndexContext()
+  const { setDashbordDataObj, handleOnDashbord } = useIndexContext()
 
   let isLogin = localStorage.getItem("token")
   let dashbordCID = parseInt(localStorage.getItem("dashbordCID"), 10);
+  let sideBarStatus = JSON.parse(localStorage.getItem("sideBarStatus")) ?? true
 
   if (!isLogin) {
     localStorage.removeItem("dashbordCID");
   }
   // console.log(`<<<<< ${isLogin} >>>>>`)
 
-  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(sideBarStatus);
+  const handleOpenSideBarModal = (async (e) => {
+    e.preventDefault()
+    let newStatus = !isSidebarOpen
+    localStorage.setItem("sideBarStatus", newStatus)
+    setIsSidebarOpen(newStatus)
+  })
 
   // OPEN CREATE BOARD
   const [openCreateBoard, setOpenCreateBoard] = useState(false);
@@ -73,13 +80,15 @@ export default function SideBar() {
     let result = await apiHelper.getRequest("get-boards")
     if (result?.code === DEVELOPMENT_CONFIG.statusCode) {
       setBoardData(result?.body)
-      if (result.body?.length > 0)
+      dashbordCID = parseInt(localStorage.getItem("dashbordCID"), 10);
+      if (result.body?.length > 0) {
         if (dashbordCID) {
           handleOnDashbord(dashbordCID)
         }
         else {
           handleOnDashbord(result?.body[0]?.id)
         }
+      }
     } else {
       setBoardData([])
     }
@@ -90,17 +99,18 @@ export default function SideBar() {
     }
   }, [])
 
-  // DISPLAY BOARD DATA ( TASK CARD, CHILD CARD)
-  const handleOnDashbord = (async (id) => {
-    localStorage.setItem("dashbordCID", id)
-    let result = await apiHelper.getRequest(`display-dashbord-card?d_c_id=${id}`)
-    if (result?.code === DEVELOPMENT_CONFIG.statusCode) {
-      setDashbordDataObj(result?.body)
-    }
-    else {
-      setDashbordDataObj({})
-    }
-  })
+  // // DISPLAY BOARD DATA ( TASK CARD WITH CHILD CARD )
+  // const handleOnDashbord = (async (id) => {
+  //   console.log("Enter in handle===========OnDashbord")
+  //   localStorage.setItem("dashbordCID", id)
+  //   let result = await apiHelper.getRequest(`display-board?b_id=${id}`)
+  //   if (result?.code === DEVELOPMENT_CONFIG.statusCode) {
+  //     setDashbordDataObj(result?.body)
+  //   }
+  //   else {
+  //     setDashbordDataObj({})
+  //   }
+  // })
 
   const [openInvite, setOpenInvite] = useState(false);
   const handleOpenInvite = () => {
@@ -128,7 +138,7 @@ export default function SideBar() {
             ? "left-54 hover:bg-[#948ab7] rounded p-1.5 w-8"
             : "left-2 bg-[#614ab8] hover:bg-[#271a83] rounded-full p-1 w-7"
             }`}
-          onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+          onClick={(e) => handleOpenSideBarModal(e)}
         >
           {isSidebarOpen ? (
             <ChevronLeft size={20} strokeWidth={2.5} />
@@ -298,11 +308,12 @@ export default function SideBar() {
         )}
       </div>
 
-      <CreateBoard open={openCreateBoard} setOpen={setOpenCreateBoard} getBoards={getBoards} handleOnDashbord={handleOnDashbord} />
-      <CloseBoard boardTitle={board_title} open={yourBoard} setOpen={setYourBoard} removeBoard={removeBoard} />
-      <CloseBoard boardTitle={boardTitle} open={openBoard} setOpen={setOpenBoard} removeBoard={removeBoard} />
-      <InviteMembers openInvite={openInvite} setOpenInvite={setOpenInvite} />
+      <CreateBoard open={openCreateBoard} setOpen={setOpenCreateBoard} getBoards={getBoards} />
       <LogIn openLogin={openLogin} setOpenLogin={setOpenLogin} getBoards={getBoards} />
+      <InviteMembers openInvite={openInvite} setOpenInvite={setOpenInvite} />
+
+      <CloseBoard boardTitle={board_title} open={yourBoard} setOpen={setYourBoard} removeBoard={removeBoard} />
+      <CloseBoard boardTitle={boardTitle} open={openBoard} setOpen={setOpenBoard} removeBoard={removeBoard} getBoards={getBoards} />
     </>
   );
 }

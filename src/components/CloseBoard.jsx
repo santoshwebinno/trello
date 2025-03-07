@@ -3,6 +3,8 @@ import Box from "@mui/material/Box";
 import Modal from "@mui/material/Modal";
 import { ChevronDown, ChevronLeft, ChevronRight, X } from "lucide-react";
 import { Link } from "react-router-dom";
+import apiHelper from "../helpers/api-helper";
+import DEVELOPMENT_CONFIG from "../helpers/config";
 
 const style = {
   position: "absolute",
@@ -14,7 +16,7 @@ const style = {
   p: 2,
 };
 
-function ChildModal({ openChild, setOpenChild, setOpen }) {
+function ChildModal({ openChild, setOpenChild, setOpen, boardData, getBoards }) {
   const handleCloseChild = () => {
     setOpenChild(false);
   };
@@ -23,6 +25,21 @@ function ChildModal({ openChild, setOpenChild, setOpen }) {
     setOpenChild(false);
     setOpen(true);
   };
+
+  const handleCloseBoard = (async (e, id) => {
+    e.preventDefault();
+    let data = JSON.stringify({})
+
+    let result = await apiHelper.postRequest(`close-board?board_id=${id}`, data)
+    if (result?.code === DEVELOPMENT_CONFIG.statusCode) {
+      handleCloseChild()
+      localStorage.removeItem("dashbordCID")
+      getBoards()
+    } else {
+      handleCloseChild()
+    }
+  })
+
 
   return (
     <>
@@ -51,7 +68,7 @@ function ChildModal({ openChild, setOpenChild, setOpen }) {
             </p>
             <button
               className="w-full bg-red-600 hover:bg-red-700 text-white text-sm font-semibold p-1 rounded"
-              onClick={handleCloseChild}
+              onClick={(e) => handleCloseBoard(e, boardData?.id)}
             >
               Close
             </button>
@@ -62,7 +79,7 @@ function ChildModal({ openChild, setOpenChild, setOpen }) {
   );
 }
 
-export default function CloseBoard({ boardTitle, open, setOpen, removeBoard }) {
+export default function CloseBoard({ boardTitle, open, setOpen, removeBoard, getBoards }) {
   const [visibility, setVisibility] = useState("Sort by most recent");
   const [isDropdownOpen, setDropdownOpen] = useState(false);
   let sortOptions = ["Sort by most recent", "Sort alphabetically"];
@@ -140,6 +157,8 @@ export default function CloseBoard({ boardTitle, open, setOpen, removeBoard }) {
         openChild={openChild}
         setOpenChild={setOpenChild}
         setOpen={setOpen}
+        boardData={boardTitle}
+        getBoards={getBoards}
       />
     </div>
   );

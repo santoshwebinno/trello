@@ -16,7 +16,7 @@ const style = {
   p: 2,
 };
 
-export default function CreateBoard({ open, setOpen, getBoards, handleOnDashbord }) {
+export default function CreateBoard({ open, setOpen, getBoards }) {
   const [boardTitle, setBoardTitle] = useState("");
   const [background, setBackground] = useState("#d946ef");
   const [visibility, setVisibility] = useState("Workspace");
@@ -43,7 +43,6 @@ export default function CreateBoard({ open, setOpen, getBoards, handleOnDashbord
     }
     return isValid
   }
-
   // CREATE BORED
   async function createBoard(e) {
     e.preventDefault();
@@ -57,13 +56,11 @@ export default function CreateBoard({ open, setOpen, getBoards, handleOnDashbord
     })
     let result = await apiHelper.postRequest("create-board", data)
     if (result?.code === DEVELOPMENT_CONFIG.statusCode) {
+      localStorage.setItem("dashbordCID", result?.body?.id)
       handleClose()
       handleReset()
-      getBoards() // UPDATE CONTENT ( Sidebar )
-      handleOnDashbord(result?.body?.id) // UPDATE CONTENT ( Deshbord )
-      localStorage.setItem("dashbordCID", result?.body?.id)
-      // then make this checked default
-      console.log("MESSAGE IF : ", result.message, result?.body)
+      getBoards() // UPDATE CONTENT OR UPDATE setBoardData([])
+      console.log("MESSAGE IF : ", result.message)
     } else {
       console.log("MESSAGE ELSE : ", result.message)
     }
