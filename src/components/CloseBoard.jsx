@@ -5,6 +5,7 @@ import { ChevronDown, ChevronLeft, ChevronRight, X } from "lucide-react";
 import { Link } from "react-router-dom";
 import apiHelper from "../helpers/api-helper";
 import DEVELOPMENT_CONFIG from "../helpers/config";
+import { useIndexContext } from "../context/IndexContext";
 
 const style = {
   position: "absolute",
@@ -16,7 +17,8 @@ const style = {
   p: 2,
 };
 
-function ChildModal({ openChild, setOpenChild, setOpen, boardData, getBoards }) {
+function ChildModal({ openChild, setOpenChild, setOpen, boardData }) {
+  const { getBoards } = useIndexContext();
   const handleCloseChild = () => {
     setOpenChild(false);
   };
@@ -26,20 +28,22 @@ function ChildModal({ openChild, setOpenChild, setOpen, boardData, getBoards }) 
     setOpen(true);
   };
 
-  const handleCloseBoard = (async (e, id) => {
+  const handleCloseBoard = async (e, id) => {
     e.preventDefault();
-    let data = JSON.stringify({})
+    let data = JSON.stringify({});
 
-    let result = await apiHelper.postRequest(`close-board?board_id=${id}`, data)
+    let result = await apiHelper.postRequest(
+      `close-board?board_id=${id}`,
+      data
+    );
     if (result?.code === DEVELOPMENT_CONFIG.statusCode) {
-      handleCloseChild()
-      localStorage.removeItem("dashbordCID")
-      getBoards()
+      handleCloseChild();
+      localStorage.removeItem("dashbordCID");
+      getBoards();
     } else {
-      handleCloseChild()
+      handleCloseChild();
     }
-  })
-
+  };
 
   return (
     <>
@@ -79,7 +83,7 @@ function ChildModal({ openChild, setOpenChild, setOpen, boardData, getBoards }) 
   );
 }
 
-export default function CloseBoard({ boardTitle, open, setOpen, removeBoard, getBoards }) {
+export default function CloseBoard({ boardTitle, open, setOpen, removeBoard }) {
   const [visibility, setVisibility] = useState("Sort by most recent");
   const [isDropdownOpen, setDropdownOpen] = useState(false);
   let sortOptions = ["Sort by most recent", "Sort alphabetically"];
@@ -126,8 +130,9 @@ export default function CloseBoard({ boardTitle, open, setOpen, removeBoard, get
                     {sortOptions.map((option) => (
                       <button
                         key={option}
-                        className={`w-full text-left p-2 text-sm text-gray-600 hover:bg-gray-100 cursor-pointer ${visibility === option ? "bg-gray-200" : ""
-                          }`}
+                        className={`w-full text-left p-2 text-sm text-gray-600 hover:bg-gray-100 cursor-pointer ${
+                          visibility === option ? "bg-gray-200" : ""
+                        }`}
                         onClick={() => {
                           setVisibility(option);
                           setDropdownOpen(false);
@@ -158,7 +163,6 @@ export default function CloseBoard({ boardTitle, open, setOpen, removeBoard, get
         setOpenChild={setOpenChild}
         setOpen={setOpen}
         boardData={boardTitle}
-        getBoards={getBoards}
       />
     </div>
   );

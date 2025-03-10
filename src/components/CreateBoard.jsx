@@ -5,6 +5,7 @@ import { ChevronDown, X } from "lucide-react";
 import { Link } from "react-router-dom";
 import apiHelper from "../helpers/api-helper";
 import DEVELOPMENT_CONFIG from "../helpers/config";
+import { useIndexContext } from "../context/IndexContext";
 
 const style = {
   position: "absolute",
@@ -16,7 +17,8 @@ const style = {
   p: 2,
 };
 
-export default function CreateBoard({ open, setOpen, getBoards }) {
+export default function CreateBoard({ open, setOpen }) {
+  const { getBoards } = useIndexContext();
   const [boardTitle, setBoardTitle] = useState("");
   const [background, setBackground] = useState("#d946ef");
   const [visibility, setVisibility] = useState("Workspace");
@@ -31,41 +33,40 @@ export default function CreateBoard({ open, setOpen, getBoards }) {
   };
 
   const handleReset = () => {
-    setBoardTitle("")
-    setBackground("#d946ef")
-    setVisibility("Workspace")
-  }
+    setBoardTitle("");
+    setBackground("#d946ef");
+    setVisibility("Workspace");
+  };
 
   const handleValidation = () => {
-    let isValid = true
+    let isValid = true;
     if (boardTitle.trim() === "") {
       isValid = false;
     }
-    return isValid
-  }
+    return isValid;
+  };
   // CREATE BORED
   async function createBoard(e) {
     e.preventDefault();
     if (!handleValidation()) {
-      return
+      return;
     }
     let data = JSON.stringify({
       bg_color: background,
       title: boardTitle,
-      visibility
-    })
-    let result = await apiHelper.postRequest("create-board", data)
+      visibility,
+    });
+    let result = await apiHelper.postRequest("create-board", data);
     if (result?.code === DEVELOPMENT_CONFIG.statusCode) {
-      localStorage.setItem("dashbordCID", result?.body?.id)
-      handleClose()
-      handleReset()
-      getBoards() // UPDATE CONTENT OR UPDATE setBoardData([])
-      console.log("MESSAGE IF : ", result.message)
+      localStorage.setItem("dashbordCID", result?.body?.id);
+      handleClose();
+      handleReset();
+      getBoards(); // UPDATE CONTENT OR UPDATE setBoardData([])
+      console.log("MESSAGE IF : ", result.message);
     } else {
-      console.log("MESSAGE ELSE : ", result.message)
+      console.log("MESSAGE ELSE : ", result.message);
     }
   }
-
 
   return (
     <div>
@@ -157,7 +158,10 @@ export default function CreateBoard({ open, setOpen, getBoards }) {
 
           <div className="flex flex-col gap-2">
             <button
-              className={`w-full text-sm py-2 rounded ${boardTitle ? "cursor-pointer text-white bg-blue-500 hover:bg-blue-600" : "cursor-not-allowed bg-gray-100 text-gray-400"}`}
+              className={`w-full text-sm py-2 rounded ${boardTitle
+                ? "cursor-pointer text-white bg-blue-500 hover:bg-blue-600"
+                : "cursor-not-allowed bg-gray-100 text-gray-400"
+                }`}
               disabled={!boardTitle}
               onClick={createBoard}
             >

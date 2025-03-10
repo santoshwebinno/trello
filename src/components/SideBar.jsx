@@ -14,18 +14,18 @@ import {
 } from "lucide-react";
 import CreateBoard from "./CreateBoard";
 import CloseBoard from "./CloseBoard";
-import apiHelper from "../helpers/api-helper";
-import DEVELOPMENT_CONFIG from "../helpers/config";
+// import apiHelper from "../helpers/api-helper";
+// import DEVELOPMENT_CONFIG from "../helpers/config";
 import { useIndexContext } from "../context/IndexContext";
 import InviteMembers from "./InviteMembers";
 import LogIn from "./LogIn";
 
 export default function SideBar() {
-  const { setDashbordDataObj, handleOnDashbord } = useIndexContext()
+  const { handleOnDashbord, boardData, getBoards } = useIndexContext();
 
-  let isLogin = localStorage.getItem("token")
+  let isLogin = localStorage.getItem("token");
   let dashbordCID = parseInt(localStorage.getItem("dashbordCID"), 10);
-  let sideBarStatus = JSON.parse(localStorage.getItem("sideBarStatus")) ?? true
+  let sideBarStatus = JSON.parse(localStorage.getItem("sideBarStatus")) ?? true;
 
   if (!isLogin) {
     localStorage.removeItem("dashbordCID");
@@ -33,28 +33,29 @@ export default function SideBar() {
   // console.log(`<<<<< ${isLogin} >>>>>`)
 
   const [isSidebarOpen, setIsSidebarOpen] = useState(sideBarStatus);
-  const handleOpenSideBarModal = (async (e) => {
-    e.preventDefault()
-    let newStatus = !isSidebarOpen
-    localStorage.setItem("sideBarStatus", newStatus)
-    setIsSidebarOpen(newStatus)
-  })
+  const handleOpenSideBarModal = async (e) => {
+    e.preventDefault();
+    let newStatus = !isSidebarOpen;
+    localStorage.setItem("sideBarStatus", newStatus);
+    setIsSidebarOpen(newStatus);
+  };
 
   // OPEN CREATE BOARD
   const [openCreateBoard, setOpenCreateBoard] = useState(false);
   const handleOpenCreateBoard = () => {
     if (!!isLogin) {
-      setOpenCreateBoard(true)
+      setOpenCreateBoard(true);
     }
-  }
+  };
 
   const [yourBoard, setYourBoard] = useState(false);
   const [openBoard, setOpenBoard] = useState(false);
   const [removeBoard, setRemoveBoard] = useState(false);
 
   const [boardTitle, setBoardTitle] = useState({
-    id: "", title: ""
-  })
+    id: "",
+    title: "",
+  });
 
   // OPEN YOUR BOARD ( FOR SORTING )
   const handleOpenYourBoard = () => {
@@ -67,37 +68,17 @@ export default function SideBar() {
   const handleOpenBoard = (e, id, title) => {
     e.stopPropagation();
     if (!!isLogin) {
-      setBoardTitle({ id, title })
+      setBoardTitle({ id, title });
       setOpenBoard(true);
       setRemoveBoard(true);
     }
   };
 
-  const [boardData, setBoardData] = useState([])
-
-  // GET BOARDS WHEN USER IS LOGED IN
-  async function getBoards() {
-    let result = await apiHelper.getRequest("get-boards")
-    if (result?.code === DEVELOPMENT_CONFIG.statusCode) {
-      setBoardData(result?.body)
-      dashbordCID = parseInt(localStorage.getItem("dashbordCID"), 10);
-      if (result.body?.length > 0) {
-        if (dashbordCID) {
-          handleOnDashbord(dashbordCID)
-        }
-        else {
-          handleOnDashbord(result?.body[0]?.id)
-        }
-      }
-    } else {
-      setBoardData([])
-    }
-  }
   useEffect(() => {
     if (!!isLogin) {
-      getBoards()
+      getBoards();
     }
-  }, [])
+  }, []);
 
   // // DISPLAY BOARD DATA ( TASK CARD WITH CHILD CARD )
   // const handleOnDashbord = (async (id) => {
@@ -126,18 +107,20 @@ export default function SideBar() {
     }
   };
 
-  const board_title = { title: "Your Boards" }
+  const board_title = { title: "Your Boards" };
   return (
     <>
       <div
-        className={`bg-[#4f37b2] transition-all duration-300 border border-[#8d99b9] relative z-10 ${isSidebarOpen ? "w-65" : "w-5"
-          }`}
+        className={`bg-[#4f37b2] transition-all duration-300 border border-[#8d99b9] relative z-10 ${
+          isSidebarOpen ? "w-65" : "w-5"
+        }`}
       >
         <button
-          className={`absolute top-3.5 transition-all ${isSidebarOpen
-            ? "left-54 hover:bg-[#948ab7] rounded p-1.5 w-8"
-            : "left-2 bg-[#614ab8] hover:bg-[#271a83] rounded-full p-1 w-7"
-            }`}
+          className={`absolute top-3.5 transition-all ${
+            isSidebarOpen
+              ? "left-54 hover:bg-[#948ab7] rounded p-1.5 w-8"
+              : "left-2 bg-[#614ab8] hover:bg-[#271a83] rounded-full p-1 w-7"
+          }`}
           onClick={(e) => handleOpenSideBarModal(e)}
         >
           {isSidebarOpen ? (
@@ -174,7 +157,8 @@ export default function SideBar() {
                     <UserRound size={18} />
                     <span className="text-sm">Members</span>
                   </span>
-                  <button className="hover:bg-[#948ab7] rounded p-1 w-7"
+                  <button
+                    className="hover:bg-[#948ab7] rounded p-1 w-7"
                     onClick={handleOpenInvite}
                   >
                     <Plus size={20} strokeWidth={2.5} />
@@ -187,8 +171,7 @@ export default function SideBar() {
                       Workspace settings
                     </span>
                   </span>
-                  <button className="p-1 w-7"
-                  >
+                  <button className="p-1 w-7">
                     <ChevronDown size={20} strokeWidth={2.5} />
                   </button>
                 </li>
@@ -255,16 +238,19 @@ export default function SideBar() {
               {boardData && boardData.length > 0 ? (
                 <>
                   <ul className="mt-1 space-y-2">
-
                     {boardData.map((item) => (
-                      <li key={item.id} className="flex items-center gap-2 cursor-pointer p-0.5 rounded hover:bg-[#918ca555] w-full justify-between group"
+                      <li
+                        key={item.id}
+                        className="flex items-center gap-2 cursor-pointer p-0.5 rounded hover:bg-[#918ca555] w-full justify-between group"
                         onClick={() => handleOnDashbord(item.id)}
                       >
                         <div className="flex items-center gap-2">
                           <span
                             className={`w-7 h-6 bg-purple-500 rounded`}
                             style={{
-                              backgroundColor: item?.bg_color?.startsWith("#") ? item?.bg_color : "transparent",
+                              backgroundColor: item?.bg_color?.startsWith("#")
+                                ? item?.bg_color
+                                : "transparent",
                               backgroundSize: "cover",
                             }}
                           ></span>
@@ -273,7 +259,9 @@ export default function SideBar() {
                         <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
                           <button
                             className="hover:bg-[#948ab7] rounded p-1 w-7"
-                            onClick={(e) => handleOpenBoard(e, item.id, item.title)}
+                            onClick={(e) =>
+                              handleOpenBoard(e, item.id, item.title)
+                            }
                           >
                             <Ellipsis size={18} strokeWidth={2.5} />
                           </button>
@@ -283,37 +271,44 @@ export default function SideBar() {
                         </div>
                       </li>
                     ))}
-
                   </ul>
                 </>
               ) : (
                 <>
                   <div>
-                    <p>
-                      You do not have any boards
-                    </p>
-                    {!isLogin &&
-                      <button className="w-full bg-gray-400 py-1 rounded mt-2 hover:bg-gray-500"
+                    <p>You do not have any boards</p>
+                    {!isLogin && (
+                      <button
+                        className="w-full bg-gray-400 py-1 rounded mt-2 hover:bg-gray-500"
                         onClick={handleOpenLogin}
                       >
                         Log In
                       </button>
-                    }
+                    )}
                   </div>
                 </>
               )}
-
             </div>
           </div>
         )}
       </div>
 
-      <CreateBoard open={openCreateBoard} setOpen={setOpenCreateBoard} getBoards={getBoards} />
-      <LogIn openLogin={openLogin} setOpenLogin={setOpenLogin} getBoards={getBoards} />
+      <CreateBoard open={openCreateBoard} setOpen={setOpenCreateBoard} />
+      <LogIn openLogin={openLogin} setOpenLogin={setOpenLogin} />
       <InviteMembers openInvite={openInvite} setOpenInvite={setOpenInvite} />
 
-      <CloseBoard boardTitle={board_title} open={yourBoard} setOpen={setYourBoard} removeBoard={removeBoard} />
-      <CloseBoard boardTitle={boardTitle} open={openBoard} setOpen={setOpenBoard} removeBoard={removeBoard} getBoards={getBoards} />
+      <CloseBoard
+        boardTitle={board_title}
+        open={yourBoard}
+        setOpen={setYourBoard}
+        removeBoard={removeBoard}
+      />
+      <CloseBoard
+        boardTitle={boardTitle}
+        open={openBoard}
+        setOpen={setOpenBoard}
+        removeBoard={removeBoard}
+      />
     </>
   );
 }
