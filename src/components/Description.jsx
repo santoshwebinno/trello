@@ -24,7 +24,6 @@ export default function Description() {
     handleComplete,
     handleUpdateChildCardTitle,
   } = useIndexContext();
-  // console.log("childCardDetails =============", childCardDetails);
 
   // CLOSE DESCRIPTION MODAL
   const handleClose = () => {
@@ -40,9 +39,21 @@ export default function Description() {
     is_archive: "",
   });
 
+  const [time, setTime] = useState(0);
+  const [isRunning, setIsRunning] = useState(false);
+  const [history, setHistory] = useState([]);
+  const [totalTime, setTotalTime] = useState(0);
+  const [showTimer, setShowTimer] = useState(false)
+  const [showHistory, setShowHistory] = useState(true)
+
   useEffect(() => {
-    setChildCardData(childCardDetails);
+    setChildCardData(childCardDetails?.history);
+    setHistory(childCardDetails?.history?.child_card_times)
+    setTotalTime(childCardDetails?.totalTime)
   }, [childCardDetails]);
+
+  const username = childCardDetails?.user?.name.split(' ')[0];
+  const firstLetter = username?.charAt(0);
 
   const [descriptionBoard, setDescriptionBoard] = useState(false);
   const handleOpenDescriptionBoard = async () => {
@@ -70,10 +81,7 @@ export default function Description() {
       c_id: id,
       description: childCardData.description,
     });
-    let result = await apiHelper.postRequest(
-      "update-child-card-description",
-      data
-    );
+    let result = await apiHelper.postRequest("update-child-card-description", data);
     if (result?.code === DEVELOPMENT_CONFIG.statusCode) {
       handleCloseDescriptionBoard();
       console.log("MESSAGE IF : ", result.message);
@@ -82,6 +90,60 @@ export default function Description() {
     }
   };
 
+  useEffect(() => {
+    let interval;
+    if (isRunning) {
+      interval = setInterval(() => {
+        setTime((prev) => prev + 1);
+      }, 1000);
+    }
+    return () => clearInterval(interval);
+  }, [isRunning]);
+
+  const handlePlay = () => {
+    setShowTimer(true)
+    setIsRunning(true);
+  };
+  const handleHideShowTimer = () => {
+    setShowTimer(!showTimer);
+  };
+  const handlePlayPause = () => {
+    setIsRunning(!isRunning);
+  };
+  const handleHideShowHistory = () => {
+    setShowHistory(!showHistory);
+  };
+
+  const formatTime = (seconds) => {
+    const h = Math.floor(seconds / 3600);
+    const m = Math.floor((seconds % 3600) / 60);
+    const s = seconds % 60;
+    return `${h}h ${m}m ${s}s`;
+  };
+
+  const handleStop = async (e, id) => {
+    e.preventDefault();
+    setIsRunning(false)
+    if (time === 0) return
+
+    let data = JSON.stringify({
+      c_id: id,
+      duration: time
+    })
+    let result = await apiHelper.postRequest("update-time", data)
+    if (result?.code === DEVELOPMENT_CONFIG.statusCode) {
+      setHistory(result.body.history);
+      setTotalTime(result.body.totalTime);
+      setShowTimer(false);
+      setTime(0);
+      console.log("MESSAGE IF : ", result.message);
+    } else {
+      setShowTimer(false); // check
+      setTime(0);
+      console.log("MESSAGE ELSE : ", result.message);
+    }
+  }
+
   return (
     <Modal
       open={openDescription}
@@ -89,8 +151,8 @@ export default function Description() {
       aria-labelledby="modal-modal-title"
       aria-describedby="modal-modal-description"
     >
-      <Box sx={style} className="rounded-xl">
-        <div className="space-y-6 text-gray-700 ">
+      <Box sx={{ ...style }} className="rounded-xl">
+        <div className="space-y-6 text-gray-700 max-h-[90vh] overflow-y-auto" >
           {/* HEADER TITLE */}
           <div className="flex w-full gap-5 items-start justify-between">
             <div className="flex flex-row w-full gap-2 items-center justify-between">
@@ -180,23 +242,6 @@ export default function Description() {
                 </div>
               </div>
 
-              {/* <div className='flex items-start gap-2 w-full'>
-                  <button className='p-1'>
-                      <Menu size={20} />
-                  </button>
-                  <div className='flex flex-col gap-4 w-full px-2'>
-                      <div className='flex justify-between items-center px-2'>
-                          <p className='text-base font-medium'>Gant</p>
-                          <button
-                              className='bg-gray-200 text-sm rounded px-4 py-1 hover:bg-gray-300'
-                          >
-                              Hide
-                          </button>
-                      </div>
-                      <div className='hidden bg-gray-200 rounded py-4 hover:bg-gray-300'>Add more detailed description</div>
-                  </div>
-              </div> */}
-
               {/* TIMER  */}
               <div className="flex items-start gap-2 w-full">
                 <button className="p-1">
@@ -205,50 +250,91 @@ export default function Description() {
                 <div className="flex flex-col gap-4 w-full px-2">
                   <div className="flex justify-between items-center px-2">
                     <p className="text-base font-medium">Work Log</p>
-                    <button className="bg-gray-200 text-sm rounded px-4 py-2 hover:bg-gray-300 cursor-pointer">
-                      Hide Details
+                    <button className="bg-gray-200 text-sm rounded px-4 py-2 hover:bg-gray-300 cursor-pointer"
+                      onClick={handleHideShowTimer}
+                    >
+                      {showTimer ? "Hide" : "Show"} Details
                     </button>
                   </div>
-
-                  <div className="flex justify-between px-4 p-2 ">
-                    <p className="text-lg text-gray-700 font-light">
-                      List Name
-                    </p>
-                    <div className="gap-4">
-                      <button>
-                        {" "}
-                        <Play size={18} />{" "}
-                      </button>
-                      <button>
-                        {" "}
-                        <Pause size={18} />{" "}
-                      </button>
-                      <button>
-                        {" "}
-                        <CircleStop size={18} />{" "}
-                      </button>
+                  {!!showTimer &&
+                    <div className="flex justify-between px-4 p-2 ">
+                      <div className="text-lg text-gray-500 font-semibold space-x-4">
+                        <span className="border-b-2 border-b-black ">{childCardData?.title}</span>
+                        <span className="text-gray-600">
+                          {formatTime(time)}
+                        </span>
+                      </div>
+                      <div className="flex gap-2">
+                        <button className="" onClick={handlePlayPause}>
+                          {isRunning ? (
+                            <Pause size={28} />
+                          ) : (
+                            <Play size={28} />
+                          )
+                          }
+                        </button>
+                        <button onClick={(e) => handleStop(e, childCardData.id)}>
+                          <CircleStop size={28} />
+                        </button>
+                      </div>
                     </div>
-                  </div>
+                  }
 
                   <div className="flex flex-col gap-2">
                     <span className="text-sm">No estimate for this card</span>
-                    <div className="flex items-end justify-between">
-                      <div className="flex flex-col">
-                        <p className="text-xs font-semibold rounded-full w-fit px-1.5 py-0.5 text-black bg-blue-500">
-                          U
-                        </p>
-                        <div>-----------</div>
-                        <span className="text-xs">3h 50m</span>
+                    <div className="flex w-full items-end justify-between gap-2">
+                      <div className="flex flex-col gap-0.5 w-64">
+                        <span className="text-xs font-semibold rounded-full w-6 h-6 flex items-center justify-center text-black bg-blue-500">
+                          {firstLetter}
+                        </span>
+                        <progress className="h-2 bg-gray-300 rounded w-full" value={totalTime} max="1440"></progress>
+                        <span className="text-xs text-gray-500">{formatTime(totalTime)}</span>
                       </div>
+
                       <div className="flex items-center gap-2">
                         <button className="bg-gray-200 text-sm rounded px-3 py-2 hover:bg-gray-300 cursor-pointer">
                           <Plus size={18} />{" "}
                         </button>
-                        <button className="bg-gray-200 text-sm rounded px-4 py-2 hover:bg-gray-300 cursor-pointer">
-                          Hide Details
+                        {!showTimer &&
+                          <button
+                            className="bg-gray-200 text-sm rounded px-3 py-2 hover:bg-gray-300 cursor-pointer"
+                            onClick={handlePlay}
+                          >
+                            <Play size={18} />{" "}
+                          </button>
+                        }
+                        <button className="bg-gray-200 text-sm rounded px-4 py-2 hover:bg-gray-300 cursor-pointer"
+                          onClick={handleHideShowHistory}
+                        >
+                          {showHistory ? "Hide" : "Show"} Details
                         </button>
                       </div>
                     </div>
+                  </div>
+
+                  <div className="border-t border-gray-500 p-2">
+                    {showHistory && history && history.length > 0 &&
+                      <ul className="flex flex-col gap-2">
+                        {/* <div className="flex justify-between text-sm text-gray-500">
+                          <span>Date</span>
+                          <span>Weak total - {formatTime(totalTime)}</span>
+                        </div> */}
+                        {history.map((entry, index) => (
+                          
+                          <div key={index} className="flex items-center gap-3 py-2">
+                            <span className="text-base font-semibold rounded-full w-8 h-8 flex items-center justify-center text-black bg-blue-500">
+                              {firstLetter}
+                            </span>
+
+                            <span className="text-base text-gray-800 font-semibold">{username}</span>
+                            <li
+                              className="text-sm p-1">
+                              {formatTime(entry.duration)}
+                            </li>
+                          </div>
+                        ))}
+                      </ul>
+                    }
                   </div>
                 </div>
               </div>
