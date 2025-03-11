@@ -16,7 +16,7 @@ import DEVELOPMENT_CONFIG from "../helpers/config";
 import { useIndexContext } from "../context/IndexContext";
 import { DndContext } from "@dnd-kit/core";
 import Description from "../components/Description";
-import { ToastContainer } from "react-toastify";
+import { toast, ToastContainer } from "react-toastify";
 
 export default function Dashbord() {
     const [newListCard, setNewListCard] = useState(false);
