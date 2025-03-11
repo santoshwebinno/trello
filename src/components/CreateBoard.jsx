@@ -6,6 +6,7 @@ import { Link } from "react-router-dom";
 import apiHelper from "../helpers/api-helper";
 import DEVELOPMENT_CONFIG from "../helpers/config";
 import { useIndexContext } from "../context/IndexContext";
+import { toast } from "react-toastify";
 
 const style = {
   position: "absolute",
@@ -31,6 +32,19 @@ export default function CreateBoard({ open, setOpen }) {
   const handleClose = () => {
     setOpen(false);
   };
+
+  const success = (msg) => {
+    toast.success(msg,
+      {
+        autoClose: 5000,
+      });
+  }
+  const error = (msg) => {
+    toast.success(msg,
+      {
+        autoClose: 5000,
+      });
+  }
 
   const handleReset = () => {
     setBoardTitle("");
@@ -62,9 +76,9 @@ export default function CreateBoard({ open, setOpen }) {
       handleClose();
       handleReset();
       getBoards(); // UPDATE CONTENT OR UPDATE setBoardData([])
-      console.log("MESSAGE IF : ", result.message);
+      success(result.message)
     } else {
-      console.log("MESSAGE ELSE : ", result.message);
+      error(result.message)
     }
   }
 

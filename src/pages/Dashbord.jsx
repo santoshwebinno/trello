@@ -16,12 +16,13 @@ import DEVELOPMENT_CONFIG from "../helpers/config";
 import { useIndexContext } from "../context/IndexContext";
 import { DndContext } from "@dnd-kit/core";
 import Description from "../components/Description";
+import { ToastContainer } from "react-toastify";
 
 export default function Dashbord() {
     const [newListCard, setNewListCard] = useState(false);
     const [newListTitle, setNewListTitle] = useState("");
 
-    const { dashbordDataObj, handleOnDashbord } = useIndexContext();
+    const { dashbordDataObj, handleOnDashbord, setBoardData, setDashbordDataObj } = useIndexContext();
 
     // OPEN AND CLOSE ADD LIST
     const handleNewListCardOpen = () => {
@@ -31,18 +32,18 @@ export default function Dashbord() {
         setNewListCard(false);
     };
 
-    // DISPLAY BOARD DATA 2 ( TASK CARD WITH CHILD CARD )
-    // const handleOnDashbord2 = (async (id) => {
-    //     console.log("Enter in handle===========OnDashbord2")
-    //     localStorage.setItem("dashbordCID", id)
-    //     let result = await apiHelper.getRequest(`display-board?b_id=${id}`)
-    //     if (result?.code === DEVELOPMENT_CONFIG.statusCode) {
-    //         setDashbordDataObj(result?.body)
-    //     }
-    //     else {
-    //         setDashbordDataObj({})
-    //     }
-    // })
+    const success = (msg) => {
+        toast.success(msg,
+            {
+                autoClose: 5000,
+            });
+    }
+    const error = (msg) => {
+        toast.success(msg,
+            {
+                autoClose: 5000,
+            });
+    }
 
     const handleValidation = () => {
         let isValid = true
@@ -66,9 +67,9 @@ export default function Dashbord() {
             handleNewListCardClose()
             setNewListTitle("")
             handleOnDashbord(dashbordDataObj?.id) // UPDATE CONTENT
-            console.log("MESSAGE IF : ", result.message)
+            success(result.message)
         } else {
-            console.log("MESSAGE ELSE : ", result.message)
+            error(result.message)
         }
     }
 
@@ -101,6 +102,19 @@ export default function Dashbord() {
         },
         [dashbordDataObj]
     );
+
+    const [isMenuOpen, setIsMenuOpen] = useState(false);
+
+    const handleToggleMenu = () => {
+        setIsMenuOpen(!isMenuOpen);
+    };
+
+    const handleLogOut = () => {
+        handleToggleMenu()
+        localStorage.removeItem("token")
+        setBoardData([])
+        setDashbordDataObj({})
+    }
 
     return (
         <>
@@ -141,13 +155,25 @@ export default function Dashbord() {
                             <ChevronDown size={15} strokeWidth={2.5} />
                         </button>
                     </div>
-                    <div className=" flex items-center gap-2">
+                    <div className=" flex items-center gap-2 relative">
                         <button className="hover:bg-[#948ab7] rounded p-1 w-6 cursor-pointer">
                             <CalendarDays size={15} strokeWidth={2.5} />
                         </button>
-                        <button className="hover:bg-[#948ab7] rounded p-1 w-6 cursor-pointer">
+                        <button className="hover:bg-[#948ab7] rounded p-1 w-6 cursor-pointer"
+                            onClick={handleToggleMenu}
+                        >
                             <Ellipsis size={15} strokeWidth={2.5} />
                         </button>
+                        {isMenuOpen && (
+                            <div className="absolute top-8 right-0 bg-white border rounded shadow-md p-2">
+                                <button
+                                    className="text-gray-500 bg-gray-200 text-base px-3 py-1 rounded hover:bg-gray-300"
+                                    onClick={handleLogOut}
+                                >
+                                    Logout
+                                </button>
+                            </div>
+                        )}
                     </div>
                 </div>
                 {/* CONTENT */}
@@ -211,6 +237,7 @@ export default function Dashbord() {
             </div>
 
             <Description />
+            <ToastContainer rtl />
         </>
     );
 }

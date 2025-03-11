@@ -4,6 +4,7 @@ import Modal from "@mui/material/Modal";
 import { X, Link } from "lucide-react";
 import apiHelper from "../helpers/api-helper";
 import DEVELOPMENT_CONFIG from "../helpers/config";
+import { toast } from "react-toastify";
 
 const style = {
     position: "absolute",
@@ -25,6 +26,20 @@ export default function InviteMembers({ openInvite, setOpenInvite }) {
         setOpenInvite(false);
     };
 
+    const success = (msg) => {
+        toast.success(msg,
+            {
+                autoClose: 5000,
+            });
+    }
+    const errorT = (msg) => {
+        toast.success(msg,
+            {
+                autoClose: 5000,
+            });
+    }
+
+
     // HANDLE INVITE MEMBER
     async function handleInviteMember(e) {
         e.preventDefault();
@@ -43,9 +58,8 @@ export default function InviteMembers({ openInvite, setOpenInvite }) {
             handleClose()
             setEmail("")
             setError("")
-            console.log("MESSAGE IF : ", result?.message)
+            success(result?.message)
         } else {
-            console.log("MESSAGE ELSE : ", result?.message)
             setError(result?.message)
         }
     }

@@ -5,6 +5,7 @@ import { X } from "lucide-react";
 import apiHelper from "../helpers/api-helper";
 import DEVELOPMENT_CONFIG from "../helpers/config";
 import { useIndexContext } from "../context/IndexContext";
+import { toast } from "react-toastify";
 
 const style = {
   position: "absolute",
@@ -29,6 +30,19 @@ export default function LogIn({ openLogin, setOpenLogin }) {
     setError("");
   };
 
+  const success = (msg) => {
+    toast.success(msg,
+      {
+        autoClose: 5000,
+      });
+  }
+  const errorT = (msg) => {
+    toast.success(msg,
+      {
+        autoClose: 5000,
+      });
+  }
+
   // LOGIN USER
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -46,9 +60,8 @@ export default function LogIn({ openLogin, setOpenLogin }) {
       localStorage.setItem("token", result?.body?.token);
       handleClose();
       getBoards(); // UPDATE BOARD AND DASHBORD DATA
-      console.log("MESAGE IF : ", result?.message);
+      success(result?.message)
     } else {
-      console.log("MESAGE ELSE : ", result?.message);
       setError(result?.message);
     }
   };
