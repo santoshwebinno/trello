@@ -1,5 +1,5 @@
 import { Archive, FilePenLine, Menu } from "lucide-react";
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState, useRef, useCallback } from "react";
 import apiHelper from "../helpers/api-helper";
 import DEVELOPMENT_CONFIG from "../helpers/config";
 import { useDraggable } from "@dnd-kit/core";
@@ -13,10 +13,10 @@ export default function ChildCard({ id, cardValues, displayDashbordCard }) {
 
   const style = transform
     ? {
-        transform: `translate(${transform.x}px, ${transform.y}px)`,
-        backgroundColor: "#E5E7EB",
-        border: "1px solid blue",
-      }
+      transform: `translate(${transform.x}px, ${transform.y}px)`,
+      backgroundColor: "#E5E7EB",
+      border: "1px solid blue",
+    }
     : undefined;
 
   let [childCard, setChildCard] = useState({});
@@ -107,12 +107,11 @@ export default function ChildCard({ id, cardValues, displayDashbordCard }) {
       ref={setNodeRef}
       {...listeners}
       {...attributes}
-      className={`flex flex-col items-start py-2 gap-2 border border-gray-300 rounded hover:ring-1 hover:ring-blue-500 group transition-colors duration-300 ${
-        isFocused ? "bg-gray-300" : ""
-      }`}
+      className={`flex flex-col items-start py-2 gap-2 border border-gray-300 rounded hover:ring-1 hover:ring-blue-500 group transition-colors duration-300 ${isFocused ? "bg-gray-300" : ""
+        }`}
       style={style}
     >
-      <div className="flex w-full items-start justify-between p-2 ">
+      <div className="flex w-full items-start justify-between p-2">
         <div className="flex items-center justify-between gap-1 w-full">
           <input
             type="checkbox"
@@ -124,10 +123,10 @@ export default function ChildCard({ id, cardValues, displayDashbordCard }) {
           <textarea
             ref={textareaRef}
             value={childCard?.title}
-            className="w-full h-8 px-2 py-2 text-sm border-none resize-none outline-none overflow-hidden"
-            onPointerDown={(e) => e.stopPropagation()}
-            onFocus={() => setIsFocused(true)}
-            onBlur={() => setIsFocused(false)}
+            className="w-full h-8 px-2 py-2 text-sm border-none resize-none outline-none overflow-hidden cursor-pointer"
+            // onPointerDown={(e) => e.stopPropagation()}
+            // onFocus={() => setIsFocused(true)}
+            // onBlur={() => setIsFocused(false)}
             onChange={(e) => {
               setChildCard((prev) => ({
                 ...prev,

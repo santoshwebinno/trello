@@ -23,10 +23,12 @@ export default function Description() {
     childCardDetails,
     handleComplete,
     handleUpdateChildCardTitle,
+    getBoards
   } = useIndexContext();
 
   // CLOSE DESCRIPTION MODAL
   const handleClose = () => {
+    getBoards(); //OR update dashbord_c_id=ID
     setOpenDescription(false);
   };
 
@@ -132,16 +134,40 @@ export default function Description() {
     })
     let result = await apiHelper.postRequest("update-time", data)
     if (result?.code === DEVELOPMENT_CONFIG.statusCode) {
-      setHistory(result.body.history);
-      setTotalTime(result.body.totalTime);
+      setHistory(result?.body?.history);
+      setTotalTime(result?.body?.totalTime);
       setShowTimer(false);
       setTime(0);
-      console.log("MESSAGE IF : ", result.message);
+      console.log("MESSAGE IF : ", result?.message);
     } else {
       setShowTimer(false); // check
       setTime(0);
-      console.log("MESSAGE ELSE : ", result.message);
+      console.log("MESSAGE ELSE : ", result?.message);
     }
+  }
+
+  // Day Wise
+  const formatDate = (isoString) => {
+    const date = new Date(isoString);
+    return date.toLocaleDateString('en-GB', {
+      weekday: 'short',
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric',
+    }).replace(',', '');
+  };
+
+  const groupedHistory = history?.reduce((acc, entry) => {
+    const date = formatDate(entry.created_at)
+    if (!acc[date]) acc[date] = { entries: [], total: 0 };
+    acc[date].entries.push(entry);
+    acc[date].total += entry.duration
+    return acc;
+  }, {})
+
+  let extractFirst = (name) => {
+    const fName = name?.charAt(0);
+    return fName
   }
 
   return (
@@ -313,24 +339,23 @@ export default function Description() {
                   </div>
 
                   <div className="border-t border-gray-500 p-2">
-                    {showHistory && history && history.length > 0 &&
+                    {showHistory && groupedHistory &&
                       <ul className="flex flex-col gap-2">
-                        {/* <div className="flex justify-between text-sm text-gray-500">
-                          <span>Date</span>
-                          <span>Weak total - {formatTime(totalTime)}</span>
-                        </div> */}
-                        {history.map((entry, index) => (
-                          
-                          <div key={index} className="flex items-center gap-3 py-2">
-                            <span className="text-base font-semibold rounded-full w-8 h-8 flex items-center justify-center text-black bg-blue-500">
-                              {firstLetter}
-                            </span>
-
-                            <span className="text-base text-gray-800 font-semibold">{username}</span>
-                            <li
-                              className="text-sm p-1">
-                              {formatTime(entry.duration)}
-                            </li>
+                        {Object.entries(groupedHistory).map(([date, data]) => (
+                          <div key={date}>
+                            <span className="text-sm text-gray-500">{date} {"-"} {formatTime(data.total)}</span>
+                            {data?.entries.map((entry, index) => (
+                              <div key={index} className="flex items-center gap-3 py-2">
+                                <span className="text-base font-semibold rounded-full w-8 h-8 flex items-center justify-center text-black bg-blue-500">
+                                  {extractFirst(entry.user_name)}
+                                </span>
+                                <span className="text-base text-gray-800 font-semibold">{entry.user_name}</span>
+                                <li
+                                  className="text-sm p-1">
+                                  {formatTime(entry.duration)}
+                                </li>
+                              </div>
+                            ))}
                           </div>
                         ))}
                       </ul>

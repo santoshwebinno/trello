@@ -58,7 +58,7 @@ export default function ContextProvider({ children }) {
     // CHECKED OR UNCHECKED CHILD CARD
     const handleComplete = async (e, id) => {
         e.preventDefault();
-        const newStatus = !childCardDetails?.is_checked;
+        const newStatus = !childCardDetails?.history?.is_checked;
         let data = JSON.stringify({
             id,
             is_checked: newStatus,
@@ -67,7 +67,10 @@ export default function ContextProvider({ children }) {
         if (result?.code === DEVELOPMENT_CONFIG.statusCode) {
             setChildCardDetails((prev) => ({
                 ...prev,
-                is_checked: newStatus,
+                history: {
+                    ...prev.history,
+                    is_checked: newStatus,
+                },
             }));
             console.log("MESSAGE IF : ", result?.message);
         } else {
@@ -77,7 +80,7 @@ export default function ContextProvider({ children }) {
 
     const handleValidation = () => {
         let isValid = true;
-        if (childCardDetails.title.trim() === "") {
+        if (childCardDetails?.history.title.trim() === "") {
             isValid = false;
         }
         return isValid;
@@ -96,15 +99,16 @@ export default function ContextProvider({ children }) {
         if (result?.code === DEVELOPMENT_CONFIG.statusCode) {
             setChildCardDetails((prev) => ({
                 ...prev,
-                title: title,
+                history: {
+                    ...prev.history,
+                    title: title,
+                },
             }));
             console.log("MESSAGE IF : ", result.message);
         } else {
             console.log("MESSAGE ELSE : ", result.message);
         }
     };
-
-    // console.log("childCardDetails", childCardDetails )
 
     return (
         <IndexContext.Provider
