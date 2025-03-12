@@ -111,15 +111,15 @@ export default function SideBar() {
   return (
     <>
       <div
-        className={`bg-[#4f37b2] transition-all duration-300 border border-[#8d99b9] relative z-10 ${
-          isSidebarOpen ? "w-65" : "w-5"
+        className={`bg-[#4f37b2] transition-all duration-300 border border-[#8d99b9] relative z-10 overflow-auto overflow-x-hidden custom-scrollbar ${
+          isSidebarOpen ? "w-65" : "w-9"
         }`}
       >
         <button
           className={`absolute top-3.5 transition-all ${
             isSidebarOpen
               ? "left-54 hover:bg-[#948ab7] rounded p-1.5 w-8"
-              : "left-2 bg-[#614ab8] hover:bg-[#271a83] rounded-full p-1 w-7"
+              : "left-1.5 bg-[#614ab8] hover:bg-[#271a83] rounded-full p-1 w-7"
           }`}
           onClick={(e) => handleOpenSideBarModal(e)}
         >

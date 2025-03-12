@@ -11,6 +11,25 @@ body {
   text-orientation: mixed;
 }
 
+/* Custom scrollbar styles */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 5px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+  border-radius: 2px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: #999;
+  border-radius: 2px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #888;
+}
+
 
 /* :root {
   font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;

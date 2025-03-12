@@ -18,12 +18,19 @@ export default function TaskCard({ id, values }) {
 
   const [addCard, setAddCard] = useState(false);
 
+  const scrollRef = useRef(null);
+  const { setNodeRef } = useDroppable({ id });
+  const cardRef = useRef(null);
+
   // OPEN AND CLOSE ADD CARD MODAL
   const handleOpenAddCard = () => {
     setAddCard(true);
     setTimeout(() => {
       if (scrollRef.current) {
         scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+      }
+      if (cardRef.current) {
+        cardRef.current.focus();
       }
     }, 100);
   };
@@ -139,20 +146,15 @@ export default function TaskCard({ id, values }) {
     // }
   }
 
-  const scrollRef = useRef(null);
-  const { setNodeRef } = useDroppable({ id });
   return (
     <>
       {!isClose ? (
         <div
           key={id}
           ref={setNodeRef}
-          className="bg-white text-gray-600 font-medium p-3 cursor-pointer min-w-72 rounded-xl shadow-md flex flex-col space-y-2"
+          className="bg-white h-fit text-gray-600 font-medium p-3 cursor-pointer min-w-72 rounded-xl shadow-md flex flex-col space-y-2"
         >
           <div className="flex items-start justify-between gap-2 pb-2 mb-1">
-            {/* <h2 className="text-sm font-semibold flex-1 w-3/4 break-words whitespace-normal">
-              {listCard.title}
-            </h2> */}
             <textarea
               value={listCard?.title}
               className="w-full h-8 px-2 py-1 text-base font-semibold resize-none outline-none overflow-hidden rounded focus:border-2 focus:border-blue-600"
@@ -186,12 +188,9 @@ export default function TaskCard({ id, values }) {
 
           <div
             ref={scrollRef}
-            className="pb-1 mb-1 flex-1 overflow-y-auto max-h-96"
+            className="pb-1 pr-1 mb-1 flex-1 overflow-y-auto overflow-x-hidden max-h-96 custom-scrollbar"
           >
-            <div
-              // ref={setNodeRef}
-              className="space-y-3 p-1"
-            >
+            <div className="space-y-3 p-1">
               {listCard && (
                 <>
                   {listCard?.child_cards?.map((item) => (
@@ -208,6 +207,7 @@ export default function TaskCard({ id, values }) {
               {addCard && (
                 <div className="flex flex-col gap-2">
                   <textarea
+                    ref={cardRef}
                     value={newValue}
                     placeholder="Enter a title or pase a link"
                     className="w-full h-fit text-sm text-gray-700 font-normal border-2 border-blue-500 rounded resize-none outline-none px-2 py-2"

@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from "react";
+import React, { useCallback, useRef, useState } from "react";
 import TaskCard from "../components/TaskCard";
 import {
     CalendarDays,
@@ -24,9 +24,16 @@ export default function Dashbord() {
 
     const { dashbordDataObj, handleOnDashbord, setBoardData, setDashbordDataObj } = useIndexContext();
 
+    const listRef = useRef(null);
+
     // OPEN AND CLOSE ADD LIST
     const handleNewListCardOpen = () => {
         setNewListCard(true);
+        setTimeout(() => {
+            if (listRef.current) {
+                listRef.current.focus();
+            }
+        }, 100);
     };
     const handleNewListCardClose = () => {
         setNewListCard(false);
@@ -119,7 +126,7 @@ export default function Dashbord() {
     return (
         <>
             <div
-                className="flex-1 overflow-auto bg-[#8636a5]"
+                className="flex-1 overflow-auto overflow-y-hidden bg-[#8636a5]"
                 style={{
                     backgroundColor: dashbordDataObj?.bg_color?.startsWith("#")
                         ? dashbordDataObj?.bg_color
@@ -178,7 +185,7 @@ export default function Dashbord() {
                 </div>
                 {/* CONTENT */}
 
-                <div className="flex gap-4 mt-16 p-3 whitespace-nowrap scrollbar-hide w-fit ">
+                <div className="flex gap-4 mt-16 p-3 w-fit ">
                     <DndContext onDragEnd={handleDragEnd}>
                         {!!dashbordDataObj &&
                             dashbordDataObj?.dashbord_cards?.map((value) => (
@@ -191,6 +198,7 @@ export default function Dashbord() {
                             {newListCard ? (
                                 <div className="bg-white h-fit p-2 rounded-xl min-w-72 flex flex-col gap-2">
                                     <textarea
+                                        ref={listRef}
                                         value={newListTitle}
                                         placeholder="Enter list name..."
                                         className="w-full h-10 text-sm text-gray-700 font-semibold border-2 border-blue-500 rounded-sm resize-none outline-none px-2 py-2"
