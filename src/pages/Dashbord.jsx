@@ -1,6 +1,7 @@
 import React, { useCallback, useRef, useState } from "react";
 import TaskCard from "../components/TaskCard";
 import {
+    Bell,
     CalendarDays,
     ChevronDown,
     Columns2,
@@ -123,6 +124,29 @@ export default function Dashbord() {
         setDashbordDataObj({})
     }
 
+    const [allNotification, setAllNotification] = useState([])
+    async function getNotification() {
+        let result = await apiHelper.getRequest("get-notification")
+        if (result?.code === DEVELOPMENT_CONFIG.statusCode) {
+            setAllNotification(result?.body)
+        } else {
+            setAllNotification([])
+        }
+    }
+
+    const [isNotificationOpen, setIsNotificationOpen] = useState(false);
+
+    const handleToggleNotifications = () => {
+        getNotification()
+        setIsNotificationOpen(!isNotificationOpen);
+    }
+    const handleCloseAll = (e) => {
+        if (!e.currentTarget.contains(e.relatedTarget)) {
+            setIsNotificationOpen(false);
+            setIsMenuOpen(false);
+        }
+    }
+
     return (
         <>
             <div
@@ -135,7 +159,7 @@ export default function Dashbord() {
                 }}
             >
                 {/* HEADER */}
-                <div className="fixed w-full flex items-center bg-[#50247e] p-3 border-t border-[#8d99b9] gap-2">
+                <div className="fixed w-full flex items-center bg-[#50247e] p-3 border-t border-[#8d99b9] gap-2 z-1">
                     <div className="flex items-center gap-2">
                         <h1 className="text-lg font-bold cursor-pointer hover:bg-[#918ca555] inline-block p-1 px-2 rounded">
                             {dashbordDataObj.title || "Your Board"}
@@ -162,7 +186,33 @@ export default function Dashbord() {
                             <ChevronDown size={15} strokeWidth={2.5} />
                         </button>
                     </div>
-                    <div className=" flex items-center gap-2 relative">
+                    <div className=" flex items-center gap-2 relative" tabIndex={0} onBlur={handleCloseAll}>
+                        <button className="hover:bg-[#948ab7] rounded p-1 w-6 cursor-pointer"
+                            onClick={handleToggleNotifications}
+                        >
+                            <Bell size={15} strokeWidth={2.5} />
+                        </button>
+                        {isNotificationOpen && (
+                            <div className="absolute h-92 w-80 top-8 left-2 bg-white border rounded shadow-md p-3">
+                                <h3 className="text-gray-700 text-lg border-b border-b-gray-300">Notifications</h3>
+                                <>
+                                    {allNotification && allNotification.length > 0 ?
+                                        (
+                                            <ul className="text-gray-600 text-sm mt-3 max-h-72 flex flex-col gap-2 overflow-y-auto overflow-x-hidden custom-scrollbar">
+                                                {allNotification.map((value) => (
+                                                    < li key={value.id} className="border border-gray-200 p-2 rounded" >{value.message}</li>
+                                                ))
+                                                }
+                                            </ul>
+                                        ) : (
+                                            <div className="h-72 flex items-center justify-center">
+                                                <p className="text-gray-700 text-lg ">No Notification</p>
+                                            </div>
+                                        )
+                                    }
+                                </>
+                            </div>
+                        )}
                         <button className="hover:bg-[#948ab7] rounded p-1 w-6 cursor-pointer">
                             <CalendarDays size={15} strokeWidth={2.5} />
                         </button>
@@ -242,7 +292,7 @@ export default function Dashbord() {
                         </>
                     )}
                 </div>
-            </div>
+            </div >
 
             <Description />
             <ToastContainer rtl />

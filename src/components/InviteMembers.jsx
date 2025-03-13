@@ -39,7 +39,6 @@ export default function InviteMembers({ openInvite, setOpenInvite }) {
             });
     }
 
-
     // HANDLE INVITE MEMBER
     async function handleInviteMember(e) {
         e.preventDefault();
@@ -77,7 +76,7 @@ export default function InviteMembers({ openInvite, setOpenInvite }) {
                         <div className="flex justify-between items-center mb-4">
                             <h2 className="text-lg text-gray-700 font-normal">Invite to Workspace</h2>
                             <button
-                                className="text-gray-400 hover:text-white"
+                                className="text-gray-400 hover:bg-gray-300 rounded p-1 w-7"
                                 onClick={handleClose}
                             >
                                 <X size={20} />
