@@ -15,15 +15,22 @@ import {
 import apiHelper from "../helpers/api-helper";
 import DEVELOPMENT_CONFIG from "../helpers/config";
 import { useIndexContext } from "../context/IndexContext";
-import { DndContext } from "@dnd-kit/core";
+import { DndContext, DragOverlay } from "@dnd-kit/core";
 import Description from "../components/Description";
 import { toast, ToastContainer } from "react-toastify";
+import ChildCard from "../components/ChildCard";
 
 export default function Dashbord() {
     const [newListCard, setNewListCard] = useState(false);
     const [newListTitle, setNewListTitle] = useState("");
 
     const { dashbordDataObj, handleOnDashbord, setBoardData, setDashbordDataObj } = useIndexContext();
+    const [activeCard, setActiveCard] = useState(null);
+
+    // DND HANDLER
+    const handleDragStart = (event) => {
+        setActiveCard(event.active.data.current);
+    };
 
     const listRef = useRef(null);
 
@@ -85,6 +92,7 @@ export default function Dashbord() {
     const handleDragEnd = useCallback(
         async (event) => {
             //   console.log("=======================>>>>>>>>>>>");
+            setActiveCard(null);
             const { active, over } = event;
 
             if (!over) return;
@@ -236,11 +244,23 @@ export default function Dashbord() {
                 {/* CONTENT */}
 
                 <div className="flex gap-4 mt-16 p-3 w-fit ">
-                    <DndContext onDragEnd={handleDragEnd}>
+                    <DndContext onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
                         {!!dashbordDataObj &&
                             dashbordDataObj?.dashbord_cards?.map((value) => (
                                 <TaskCard key={value.id} id={value.id} values={value} />
                             ))}
+
+                        <DragOverlay>
+                            {activeCard ? (
+                                <div className="bg-[#E5E7EB] text-gray-600 rounded">
+                                    <ChildCard
+                                        key={activeCard.id}
+                                        id={activeCard.id}
+                                        cardValues={activeCard}
+                                    />
+                                </div>
+                            ) : null}
+                        </DragOverlay>
                     </DndContext>
 
                     {dashbordDataObj.id && (

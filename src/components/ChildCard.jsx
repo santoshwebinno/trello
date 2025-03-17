@@ -9,13 +9,18 @@ export default function ChildCard({ id, cardValues, displayDashbordCard }) {
   // console.log("cardValues ============= ", cardValues);
   const { handleOpenDescriptionModal } = useIndexContext();
 
-  const { attributes, listeners, setNodeRef, transform } = useDraggable({ id });
+  const { attributes, listeners, setNodeRef, transform } = useDraggable({
+    id,
+    data: { ...cardValues },
+  });
 
   const style = transform
     ? {
       transform: `translate(${transform.x}px, ${transform.y}px)`,
       backgroundColor: "#E5E7EB",
-      border: "1px solid blue",
+      // border: "1px solid blue",
+      zIndex: 1000,
+      position: "relative",
     }
     : undefined;
 
@@ -65,7 +70,6 @@ export default function ChildCard({ id, cardValues, displayDashbordCard }) {
   };
 
   const textareaRef = useRef(null);
-  const [isFocused, setIsFocused] = useState(false);
 
   const handleButtonClick = (e) => {
     e.stopPropagation();
@@ -107,8 +111,7 @@ export default function ChildCard({ id, cardValues, displayDashbordCard }) {
       ref={setNodeRef}
       {...listeners}
       {...attributes}
-      className={`flex flex-col items-start py-2 gap-2 border border-gray-300 rounded hover:ring-1 hover:ring-blue-500 group transition-colors duration-300 ${isFocused ? "bg-gray-300" : ""
-        }`}
+      className={`flex flex-col items-start py-2 gap-2 border border-gray-300 rounded hover:ring-1 hover:ring-blue-500 group transition-colors duration-300`}
       style={style}
     >
       <div className="flex w-full items-start justify-between p-2">
@@ -124,9 +127,6 @@ export default function ChildCard({ id, cardValues, displayDashbordCard }) {
             ref={textareaRef}
             value={childCard?.title}
             className="w-full h-8 px-2 py-2 text-sm border-none resize-none outline-none overflow-hidden cursor-pointer"
-            // onPointerDown={(e) => e.stopPropagation()}
-            // onFocus={() => setIsFocused(true)}
-            // onBlur={() => setIsFocused(false)}
             onChange={(e) => {
               setChildCard((prev) => ({
                 ...prev,

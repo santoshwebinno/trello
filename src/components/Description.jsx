@@ -40,13 +40,11 @@ export default function Description() {
     dashbord_c_id: "",
     is_archive: "",
   });
-
-  const [time, setTime] = useState(0);
-  const [isRunning, setIsRunning] = useState(false);
   const [history, setHistory] = useState([]);
   const [totalTime, setTotalTime] = useState(0);
-  const [showTimer, setShowTimer] = useState(false)
-  const [showHistory, setShowHistory] = useState(true)
+  const [showHistory, setShowHistory] = useState(true);
+
+  const [timers, setTimers] = useState({});
 
   useEffect(() => {
     setChildCardData(childCardDetails?.history);
@@ -92,31 +90,90 @@ export default function Description() {
     }
   };
 
-  useEffect(() => {
-    let interval;
-    if (isRunning) {
-      interval = setInterval(() => {
-        setTime((prev) => prev + 1);
-      }, 1000);
+  async function screenShot() {
+    let data = JSON.stringify({
+      card_id: childCardData?.id
+    })
+    let result = await apiHelper.postRequest("screen-shot", data)
+    if (result?.code === DEVELOPMENT_CONFIG.statusCode) {
+      console.log("MESSAGE IF : ", result?.message)
+    } else {
+      console.log("MESSAGE ELSE : ", result?.message)
     }
-    return () => clearInterval(interval);
-  }, [isRunning]);
+  }
 
-  const handlePlay = () => {
-    setShowTimer(true)
-    setIsRunning(true);
+  const handleHideShowTimer = (cardId) => {
+    setTimers((prevTimers) => ({
+      ...prevTimers,
+      [cardId]: {
+        ...prevTimers[cardId],
+        showTimer: !prevTimers[cardId]?.showTimer,
+      },
+    }));
   };
-  const handleHideShowTimer = () => {
-    setShowTimer(!showTimer);
-  };
-  const handlePlayPause = () => {
-    setIsRunning(!isRunning);
-  };
-  const handleHideShowHistory = () => {
-    setShowHistory(!showHistory);
+  const handleHideShowHistory = (cardId) => {
+    setShowHistory(!showHistory)
+    // setTimers((prevTimers) => ({
+    //   ...prevTimers,
+    //   [cardId]: {
+    //     ...prevTimers[cardId],
+    //     showHistory: !prevTimers[cardId]?.showHistory,
+    //   },
+    // }));
   };
 
-  const formatTime = (seconds) => {
+  useEffect(() => {
+    const intervals = {};
+    Object.keys(timers).forEach((cardId) => {
+      if (timers[cardId].isRunning) {
+        intervals[cardId] = setInterval(() => {
+          setTimers((prevTimers) => {
+            const newTime = (prevTimers[cardId]?.time ?? 0) + 1;
+            if (newTime % 20 === 0) {
+              // screenShot()
+            }
+            return {
+              ...prevTimers,
+              [cardId]: {
+                ...prevTimers[cardId],
+                time: newTime
+              },
+            }
+          });
+        }, 1000);
+      }
+    });
+    return () => {
+      Object.values(intervals).forEach(clearInterval);
+    };
+  }, [timers]);
+
+  const handlePlay = (cardId) => {
+    setTimers((prevTimers) => ({
+      ...prevTimers,
+      [cardId]: {
+        isRunning: true,
+        time: prevTimers[cardId]?.time ?? 0,
+        showTimer: true,
+        // showHistory: true
+      },
+    }));
+  };
+
+  const handlePlayPause = (cardId) => {
+    setTimers((prevTimers) => ({
+      ...prevTimers,
+      [cardId]: {
+        ...prevTimers[cardId],
+        isRunning: !prevTimers[cardId]?.isRunning,
+        time: prevTimers[cardId]?.time ?? 0,
+      },
+    }));
+  };
+
+  const formatTime = (seconds = 0) => {
+    if (isNaN(seconds)) seconds = 0;
+
     const h = Math.floor(seconds / 3600);
     const m = Math.floor((seconds % 3600) / 60);
     const s = seconds % 60;
@@ -125,23 +182,37 @@ export default function Description() {
 
   const handleStop = async (e, id) => {
     e.preventDefault();
-    setIsRunning(false)
-    if (time === 0) return
+
+    if (timers[id]?.time === 0) return
 
     let data = JSON.stringify({
       c_id: id,
-      duration: time
+      duration: timers[id]?.time
     })
     let result = await apiHelper.postRequest("update-time", data)
     if (result?.code === DEVELOPMENT_CONFIG.statusCode) {
       setHistory(result?.body?.history);
       setTotalTime(result?.body?.totalTime);
-      setShowTimer(false);
-      setTime(0);
+      setTimers((prevTimers) => ({
+        ...prevTimers,
+        [id]: {
+          ...prevTimers[id],
+          isRunning: false,
+          time: 0,
+          showTimer: false
+        },
+      }));
       console.log("MESSAGE IF : ", result?.message);
     } else {
-      setShowTimer(false); // check
-      setTime(0);
+      setTimers((prevTimers) => ({
+        ...prevTimers,
+        [id]: {
+          ...prevTimers[id],
+          isRunning: false,
+          time: 0,
+          showTimer: false // check
+        },
+      }));
       console.log("MESSAGE ELSE : ", result?.message);
     }
   }
@@ -251,7 +322,7 @@ export default function Description() {
                         <button
                           className="border border-blue-700 text-white px-3 rounded bg-blue-600"
                           onClick={(e) => {
-                            handleUpdateDescription(e, childCardData.id);
+                            handleUpdateDescription(e, childCardData?.id);
                           }}
                         >
                           Save
@@ -277,29 +348,31 @@ export default function Description() {
                   <div className="flex justify-between items-center px-2">
                     <p className="text-base font-medium">Work Log</p>
                     <button className="bg-gray-200 text-sm rounded px-4 py-2 hover:bg-gray-300 cursor-pointer"
-                      onClick={handleHideShowTimer}
+                      onClick={() => handleHideShowTimer(childCardData?.id)}
                     >
-                      {showTimer ? "Hide" : "Show"} Details
+                      {timers[childCardData?.id]?.showTimer ? "Hide" : "Show"} Details
                     </button>
                   </div>
-                  {!!showTimer &&
+                  {!!timers[childCardData?.id]?.showTimer &&
                     <div className="flex justify-between px-4 p-2 ">
                       <div className="text-lg text-gray-500 font-semibold space-x-4">
                         <span className="border-b-2 border-b-black ">{childCardData?.title}</span>
                         <span className="text-gray-600">
-                          {formatTime(time)}
+                          {formatTime(timers[childCardData?.id]?.time)}
                         </span>
                       </div>
                       <div className="flex gap-2">
-                        <button className="" onClick={handlePlayPause}>
-                          {isRunning ? (
+                        <button className=""
+                          onClick={() => handlePlayPause(childCardData?.id)}
+                        >
+                          {timers[childCardData?.id]?.isRunning ? (
                             <Pause size={28} />
                           ) : (
                             <Play size={28} />
                           )
                           }
                         </button>
-                        <button onClick={(e) => handleStop(e, childCardData.id)}>
+                        <button onClick={(e) => handleStop(e, childCardData?.id)}>
                           <CircleStop size={28} />
                         </button>
                       </div>
@@ -321,16 +394,16 @@ export default function Description() {
                         <button className="bg-gray-200 text-sm rounded px-3 py-2 hover:bg-gray-300 cursor-pointer">
                           <Plus size={18} />{" "}
                         </button>
-                        {!showTimer &&
+                        {!timers[childCardData?.id]?.showTimer &&
                           <button
                             className="bg-gray-200 text-sm rounded px-3 py-2 hover:bg-gray-300 cursor-pointer"
-                            onClick={handlePlay}
+                            onClick={() => handlePlay(childCardData.id)}
                           >
                             <Play size={18} />{" "}
                           </button>
                         }
                         <button className="bg-gray-200 text-sm rounded px-4 py-2 hover:bg-gray-300 cursor-pointer"
-                          onClick={handleHideShowHistory}
+                          onClick={() => handleHideShowHistory(childCardData?.id)}
                         >
                           {showHistory ? "Hide" : "Show"} Details
                         </button>
