@@ -6,7 +6,6 @@ import { useDraggable } from "@dnd-kit/core";
 import { useIndexContext } from "../context/IndexContext";
 
 export default function ChildCard({ id, cardValues, displayDashbordCard }) {
-  // console.log("cardValues ============= ", cardValues);
   const { handleOpenDescriptionModal } = useIndexContext();
 
   const { attributes, listeners, setNodeRef, transform } = useDraggable({
@@ -45,9 +44,6 @@ export default function ChildCard({ id, cardValues, displayDashbordCard }) {
         ...prev,
         is_checked: newStatus,
       }));
-      console.log("MESSAGE IF : ", result?.message);
-    } else {
-      console.log("MESSAGE ELSE : ", result?.message);
     }
   };
 
@@ -63,14 +59,11 @@ export default function ChildCard({ id, cardValues, displayDashbordCard }) {
     if (result?.code === DEVELOPMENT_CONFIG.statusCode) {
       // UPDATE CONTENT AFTER ARCHIVED
       displayDashbordCard(result?.body?.dashbord_c_id);
-      console.log("MESSAGE IF : ", result?.message);
-    } else {
-      console.log("MESSAGE ELSE : ", result?.message);
     }
   };
 
+  // NOT IN USE >>>>>>>>>>>>>>>>>>>>
   const textareaRef = useRef(null);
-
   const handleButtonClick = (e) => {
     e.stopPropagation();
     textareaRef.current?.focus();
@@ -99,9 +92,6 @@ export default function ChildCard({ id, cardValues, displayDashbordCard }) {
         ...prev,
         title: title,
       }));
-      console.log("MESSAGE IF : ", result.message);
-    } else {
-      console.log("MESSAGE ELSE : ", result.message);
     }
   };
 
@@ -123,13 +113,14 @@ export default function ChildCard({ id, cardValues, displayDashbordCard }) {
             onPointerDown={(e) => e.stopPropagation()}
             onChange={(e) => handleComplete(e, id)}
           />
-          <textarea
+          <span className="w-full px-2 text-sm">{childCard?.title}</span>
+          {/* <textarea
             ref={textareaRef}
             value={childCard?.title}
             className="w-full h-8 px-2 py-2 text-sm border-none resize-none outline-none overflow-hidden cursor-pointer"
             onChange={(e) => {
               setChildCard((prev) => ({
-                ...prev,
+                ...prev,  
                 title: e.target.value,
               }));
               e.target.style.height = "32";
@@ -141,7 +132,7 @@ export default function ChildCard({ id, cardValues, displayDashbordCard }) {
                 handleUpdateChildCardTitle(e, childCard.id, childCard.title);
               }
             }}
-          />
+          /> */}
         </div>
         <div className="flex items-center gap-1.5">
           {!!childCard?.is_checked && (

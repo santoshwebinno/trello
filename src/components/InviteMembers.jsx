@@ -32,12 +32,6 @@ export default function InviteMembers({ openInvite, setOpenInvite }) {
                 autoClose: 5000,
             });
     }
-    const errorT = (msg) => {
-        toast.success(msg,
-            {
-                autoClose: 5000,
-            });
-    }
 
     // HANDLE INVITE MEMBER
     async function handleInviteMember(e) {
@@ -49,7 +43,7 @@ export default function InviteMembers({ openInvite, setOpenInvite }) {
         setError("");
 
         let data = JSON.stringify({
-            task_id: dashbordCID,
+            board_id: dashbordCID,
             collaborator_email: email
         })
         let result = await apiHelper.postRequest("collaborator-access", data)

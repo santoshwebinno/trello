@@ -27,12 +27,20 @@ export default function Dashbord() {
     const { dashbordDataObj, handleOnDashbord, setBoardData, setDashbordDataObj } = useIndexContext();
     const [activeCard, setActiveCard] = useState(null);
 
-    // DND HANDLER
-    const handleDragStart = (event) => {
-        setActiveCard(event.active.data.current);
-    };
+    const [isMenuOpen, setIsMenuOpen] = useState(false);
+
+    const [allNotification, setAllNotification] = useState([])
+    const [isNotificationOpen, setIsNotificationOpen] = useState(false);
+
+    const [isBoardUsers, setIsBoardUsers] = useState(false)
+    const [boardUsers, setBoardUsers] = useState({})
+
+    const [isChatbox, setIsChatbox] = useState(false)
+    const [chatboxData, setChatboxData] = useState({})
 
     const listRef = useRef(null);
+
+    let dashbordCID = parseInt(localStorage.getItem("dashbordCID"), 10);
 
     // OPEN AND CLOSE ADD LIST
     const handleNewListCardOpen = () => {
@@ -43,6 +51,7 @@ export default function Dashbord() {
             }
         }, 100);
     };
+
     const handleNewListCardClose = () => {
         setNewListCard(false);
     };
@@ -75,7 +84,7 @@ export default function Dashbord() {
         }
         let data = JSON.stringify({
             title: newListTitle,
-            board_id: dashbordDataObj?.id // OR FROM LS
+            board_id: dashbordDataObj?.id
         })
         let result = await apiHelper.postRequest("create-dashbord-card", data)
         if (result?.code === DEVELOPMENT_CONFIG.statusCode) {
@@ -88,10 +97,14 @@ export default function Dashbord() {
         }
     }
 
+    // DND HANDLER
+    const handleDragStart = (event) => {
+        setActiveCard(event.active.data.current);
+    };
+
     // DREAG AND DROP HANDLE
     const handleDragEnd = useCallback(
         async (event) => {
-            //   console.log("=======================>>>>>>>>>>>");
             setActiveCard(null);
             const { active, over } = event;
 
@@ -100,8 +113,6 @@ export default function Dashbord() {
             const taskId = active.id;
             const newStatus = over.id;
 
-            //   console.log("taskId-child, newStatus-dachbord-card ", taskId, newStatus);
-
             // UPDATE PARENT OF CHILD CARD
             const data = JSON.stringify({
                 id: taskId,
@@ -109,17 +120,11 @@ export default function Dashbord() {
             });
             let result = await apiHelper.postRequest("update-child-card", data);
             if (result?.code === DEVELOPMENT_CONFIG.statusCode) {
-                // UPDATE CONTENT ( OR FROM LS )
                 handleOnDashbord(dashbordDataObj?.id);
-                console.log("MESSAGE IF : ", result?.message);
-            } else {
-                console.log("MESSAGE ELSE : ", result?.message);
             }
         },
         [dashbordDataObj]
     );
-
-    const [isMenuOpen, setIsMenuOpen] = useState(false);
 
     const handleToggleMenu = () => {
         setIsMenuOpen(!isMenuOpen);
@@ -132,7 +137,6 @@ export default function Dashbord() {
         setDashbordDataObj({})
     }
 
-    const [allNotification, setAllNotification] = useState([])
     async function getNotification() {
         let result = await apiHelper.getRequest("get-notification")
         if (result?.code === DEVELOPMENT_CONFIG.statusCode) {
@@ -142,17 +146,38 @@ export default function Dashbord() {
         }
     }
 
-    const [isNotificationOpen, setIsNotificationOpen] = useState(false);
-
     const handleToggleNotifications = () => {
         getNotification()
         setIsNotificationOpen(!isNotificationOpen);
     }
+
     const handleCloseAll = (e) => {
         if (!e.currentTarget.contains(e.relatedTarget)) {
             setIsNotificationOpen(false);
             setIsMenuOpen(false);
+            setIsBoardUsers(false);
         }
+    }
+
+    async function getBoardUsers(id) {
+        let result = await apiHelper.getRequest(`get-board-users?board_id=${id}`)
+        if (result?.code === DEVELOPMENT_CONFIG.statusCode) {
+            setBoardUsers(result?.body)
+        } else {
+            setBoardUsers({})
+        }
+    }
+
+    const handleToggleBoardUsers = async () => {
+        if (!!dashbordCID) {
+            getBoardUsers(dashbordCID)
+        }
+        setIsBoardUsers(!isBoardUsers)
+    }
+
+    const handleChatbox = async (id) => {
+        setIsChatbox(true)
+        setChatboxData(id)
     }
 
     return (
@@ -168,16 +193,34 @@ export default function Dashbord() {
             >
                 {/* HEADER */}
                 <div className="fixed w-full flex items-center bg-[#50247e] p-3 border-t border-[#8d99b9] gap-2 z-1">
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 relative" tabIndex={0} onBlur={handleCloseAll}>
                         <h1 className="text-lg font-bold cursor-pointer hover:bg-[#918ca555] inline-block p-1 px-2 rounded">
                             {dashbordDataObj.title || "Your Board"}
                         </h1>
                         <button className="hover:bg-[#948ab7] rounded cursor-pointer p-2">
                             <Star size={16} strokeWidth={2.5} />
                         </button>
-                        <button className="hover:bg-[#948ab7] rounded cursor-pointer p-2">
+                        <button className="hover:bg-[#948ab7] rounded cursor-pointer p-2"
+                            onClick={handleToggleBoardUsers}
+                        >
                             <UsersRound size={16} strokeWidth={2.5} />
                         </button>
+                        {isBoardUsers && (
+                            <div className="absolute h-fit w-64 top-8 right-0 bg-white border rounded shadow-md p-3">
+                                <h3 className="text-gray-700 text-lg border-b border-b-gray-300">All Board Users</h3>
+                                {!!boardUsers && boardUsers.length > 0 && (
+                                    <ul className="text-gray-600 text-sm mt-3 max-h-72 flex flex-col gap-2 overflow-y-auto overflow-x-hidden custom-scrollbar">
+                                        {boardUsers?.map((value) => (
+                                            <li
+                                                key={value.id}
+                                                className="p-2 rounded cursor-pointer hover:bg-gray-200"
+                                                onClick={() => handleChatbox(value?.id)}
+                                            >{value.name}</li>
+                                        ))}
+                                    </ul>
+                                )}
+                            </div>
+                        )}
                         <button className="flex items-center gap-1 cursor-pointer text-sm font-semibold bg-amber-50 text-gray-700 px-2.5 py-2 rounded">
                             <Columns2 size={15} strokeWidth={2.5} />
                             <span className="">Board</span>
@@ -203,22 +246,20 @@ export default function Dashbord() {
                         {isNotificationOpen && (
                             <div className="absolute h-92 w-80 top-8 left-2 bg-white border rounded shadow-md p-3">
                                 <h3 className="text-gray-700 text-lg border-b border-b-gray-300">Notifications</h3>
-                                <>
-                                    {allNotification && allNotification.length > 0 ?
-                                        (
-                                            <ul className="text-gray-600 text-sm mt-3 max-h-72 flex flex-col gap-2 overflow-y-auto overflow-x-hidden custom-scrollbar">
-                                                {allNotification.map((value) => (
-                                                    < li key={value.id} className="border border-gray-200 p-2 rounded" >{value.message}</li>
-                                                ))
-                                                }
-                                            </ul>
-                                        ) : (
-                                            <div className="h-72 flex items-center justify-center">
-                                                <p className="text-gray-700 text-lg ">No Notification</p>
-                                            </div>
-                                        )
-                                    }
-                                </>
+                                {allNotification && allNotification.length > 0 ?
+                                    (
+                                        <ul className="text-gray-600 text-sm mt-3 max-h-72 flex flex-col gap-2 overflow-y-auto overflow-x-hidden custom-scrollbar">
+                                            {allNotification.map((value) => (
+                                                < li key={value.id} className="border border-gray-200 p-2 rounded" >{value.message}</li>
+                                            ))
+                                            }
+                                        </ul>
+                                    ) : (
+                                        <div className="h-72 flex items-center justify-center">
+                                            <p className="text-gray-700 text-lg ">No Notification</p>
+                                        </div>
+                                    )
+                                }
                             </div>
                         )}
                         <button className="hover:bg-[#948ab7] rounded p-1 w-6 cursor-pointer">
@@ -243,7 +284,7 @@ export default function Dashbord() {
                 </div>
                 {/* CONTENT */}
 
-                <div className="flex gap-4 mt-16 p-3 w-fit ">
+                <div className="flex gap-4 mt-16 p-3 w-fit relative">
                     <DndContext onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
                         {!!dashbordDataObj &&
                             dashbordDataObj?.dashbord_cards?.map((value) => (
@@ -310,6 +351,24 @@ export default function Dashbord() {
                                 </div>
                             )}
                         </>
+                    )}
+
+                    {/* CHAT BOT */}
+                    {!!isChatbox && (
+                        <div className="fixed min-h-72 w-80 mt-16 top-10 right-10 bg-green-50 border rounded-lg shadow-md p-4">
+                            <div className="flex flex-col gap-2">
+                                <div className="text-gray-600 flex items-center justify-between">
+                                    <span className="text-sm font-semibold">USER NAME</span>
+                                    <button
+                                        className="cursor-pointer"
+                                        onClick={() => setIsChatbox(false)}
+                                    >
+                                        < X size={18} strokeWidth={2.5} />
+                                    </button>
+                                </div>
+                                <div className="text-gray-600">{chatboxData}</div >
+                            </div>
+                        </div>
                     )}
                 </div>
             </div >

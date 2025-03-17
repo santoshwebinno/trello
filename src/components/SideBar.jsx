@@ -80,19 +80,6 @@ export default function SideBar() {
     }
   }, []);
 
-  // // DISPLAY BOARD DATA ( TASK CARD WITH CHILD CARD )
-  // const handleOnDashbord = (async (id) => {
-  //   console.log("Enter in handle===========OnDashbord")
-  //   localStorage.setItem("dashbordCID", id)
-  //   let result = await apiHelper.getRequest(`display-board?b_id=${id}`)
-  //   if (result?.code === DEVELOPMENT_CONFIG.statusCode) {
-  //     setDashbordDataObj(result?.body)
-  //   }
-  //   else {
-  //     setDashbordDataObj({})
-  //   }
-  // })
-
   const [openInvite, setOpenInvite] = useState(false);
   const handleOpenInvite = () => {
     if (!!isLogin && !!dashbordCID) {
