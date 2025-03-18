@@ -7,6 +7,7 @@ import {
     Columns2,
     Ellipsis,
     Plus,
+    SendHorizontal,
     Star,
     Table2,
     UsersRound,
@@ -19,6 +20,10 @@ import { DndContext, DragOverlay } from "@dnd-kit/core";
 import Description from "../components/Description";
 import { toast, ToastContainer } from "react-toastify";
 import ChildCard from "../components/ChildCard";
+import io from "socket.io-client"
+
+const socket = io.connect("http://localhost:4321")
+
 
 export default function Dashbord() {
     const [newListCard, setNewListCard] = useState(false);
@@ -36,7 +41,8 @@ export default function Dashbord() {
     const [boardUsers, setBoardUsers] = useState({})
 
     const [isChatbox, setIsChatbox] = useState(false)
-    const [chatboxData, setChatboxData] = useState({})
+
+    const [message, setMessage] = useState("");
 
     const listRef = useRef(null);
 
@@ -175,10 +181,24 @@ export default function Dashbord() {
         setIsBoardUsers(!isBoardUsers)
     }
 
-    const handleChatbox = async (id) => {
+    const handleJoinChat = async (e, value) => {
+        e.preventDefault();
         setIsChatbox(true)
-        setChatboxData(id)
+        let data = JSON.stringify({
+            user_2: value?.id
+        })
+        let result = await apiHelper.postRequest("create-new-chat", data)
+        if (result?.code === DEVELOPMENT_CONFIG.statusCode) {
+            console.log("result : ", result)
+        }
     }
+
+    // const joinChat = () => {
+    //     // if (username !== "" && room !== "") {
+    //     socket.emit("join_chat");
+    //     // setShowChat(true)
+    //     // }
+    // };
 
     return (
         <>
@@ -214,7 +234,7 @@ export default function Dashbord() {
                                             <li
                                                 key={value.id}
                                                 className="p-2 rounded cursor-pointer hover:bg-gray-200"
-                                                onClick={() => handleChatbox(value?.id)}
+                                                onClick={(e) => handleJoinChat(e, value)}
                                             >{value.name}</li>
                                         ))}
                                     </ul>
@@ -355,9 +375,10 @@ export default function Dashbord() {
 
                     {/* CHAT BOT */}
                     {!!isChatbox && (
-                        <div className="fixed min-h-72 w-80 mt-16 top-10 right-10 bg-green-50 border rounded-lg shadow-md p-4">
-                            <div className="flex flex-col gap-2">
-                                <div className="text-gray-600 flex items-center justify-between">
+                        <div className="fixed min-h-92 w-92 mt-16 top-10 right-10 bg-green-50 border border-green-200 rounded-lg shadow-md p-1">
+                            <div className="flex flex-col text-gray-600 gap-1 h-92">
+
+                                <div className="flex items-center justify-between p-1">
                                     <span className="text-sm font-semibold">USER NAME</span>
                                     <button
                                         className="cursor-pointer"
@@ -366,7 +387,23 @@ export default function Dashbord() {
                                         < X size={18} strokeWidth={2.5} />
                                     </button>
                                 </div>
-                                <div className="text-gray-600">{chatboxData}</div >
+
+                                <div className="flex-1 overflow-y-auto p-2">{"User"}</div >
+
+                                <div className="flex items-center justify-between gap-2" >
+                                    <input
+                                        className="rounded-full border w-full border-green-400 bg-white text-sm font-medium p-2 ring-1 ring-transparent focus:ring-green-500 focus:border-green-500 outline-none transition"
+                                        type="text"
+                                        value={message}
+                                        placeholder="Enter Message"
+                                        onChange={(event) => {
+                                            setMessage(event.target.value);
+                                        }}
+                                    />
+                                    <button className="h-10 w-10 px-2.5 rounded-full border border-green-400 hover:border-2 hover:border-green-500 bg-green-300">
+                                        <SendHorizontal size={20} />
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     )}
