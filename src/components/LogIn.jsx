@@ -58,6 +58,7 @@ export default function LogIn({ openLogin, setOpenLogin }) {
     let result = await apiHelper.postRequest("log-in", data);
     if (result?.code === DEVELOPMENT_CONFIG.statusCode) {
       localStorage.setItem("token", result?.body?.token);
+      localStorage.setItem("loggedInUser", result?.body?.user?.id);
       handleClose();
       getBoards(); // UPDATE BOARD AND DASHBORD DATA
       success(result?.message)

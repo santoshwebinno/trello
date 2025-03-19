@@ -1,4 +1,4 @@
-import React, { useCallback, useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import TaskCard from "../components/TaskCard";
 import {
     Bell,
@@ -6,6 +6,7 @@ import {
     ChevronDown,
     Columns2,
     Ellipsis,
+    MessagesSquare,
     Plus,
     SendHorizontal,
     Star,
@@ -21,6 +22,7 @@ import Description from "../components/Description";
 import { toast, ToastContainer } from "react-toastify";
 import ChildCard from "../components/ChildCard";
 import io from "socket.io-client"
+import ScrollToBottom, { useScrollToBottom, useSticky } from "react-scroll-to-bottom";
 
 const socket = io.connect("http://localhost:4321")
 
@@ -42,11 +44,19 @@ export default function Dashbord() {
 
     const [isChatbox, setIsChatbox] = useState(false)
 
+    const [chatUserDetail, setChatUserDetail] = useState({})
     const [message, setMessage] = useState("");
+    const [chatId, setChatId] = useState(null);
+    const [messages, setMessages] = useState([]);
 
     const listRef = useRef(null);
 
+    let isLogin = localStorage.getItem("token");
     let dashbordCID = parseInt(localStorage.getItem("dashbordCID"), 10);
+    let loggedInUser = parseInt(localStorage.getItem("loggedInUser"), 10);
+
+    // const scrollToBottom = useScrollToBottom()
+    // const [sticky] = useSticky();
 
     // OPEN AND CLOSE ADD LIST
     const handleNewListCardOpen = () => {
@@ -132,17 +142,24 @@ export default function Dashbord() {
         [dashbordDataObj]
     );
 
+    // LOGOUT 
     const handleToggleMenu = () => {
-        setIsMenuOpen(!isMenuOpen);
+        if (isLogin) {
+            setIsMenuOpen(!isMenuOpen);
+        }
     };
 
     const handleLogOut = () => {
-        handleToggleMenu()
+        setIsMenuOpen(false)
         localStorage.removeItem("token")
+        localStorage.removeItem("loggedInUser")
         setBoardData([])
         setDashbordDataObj({})
+        setIsChatbox(false)
+        setIsNotificationOpen(false)
     }
 
+    // GET NOTIFICATION ( ONCLICK )
     async function getNotification() {
         let result = await apiHelper.getRequest("get-notification")
         if (result?.code === DEVELOPMENT_CONFIG.statusCode) {
@@ -153,18 +170,22 @@ export default function Dashbord() {
     }
 
     const handleToggleNotifications = () => {
-        getNotification()
-        setIsNotificationOpen(!isNotificationOpen);
-    }
-
-    const handleCloseAll = (e) => {
-        if (!e.currentTarget.contains(e.relatedTarget)) {
-            setIsNotificationOpen(false);
-            setIsMenuOpen(false);
-            setIsBoardUsers(false);
+        if (isLogin) {
+            getNotification()
+            setIsNotificationOpen(!isNotificationOpen);
         }
     }
 
+    // CLOSE 3 POP-UPS
+    const handleCloseAll = (e) => {
+        if (!e.currentTarget.contains(e.relatedTarget)) {
+            // setIsBoardUsers(false);
+            setIsNotificationOpen(false);
+            setIsMenuOpen(false);
+        }
+    }
+
+    // GET BOARD USERS ( ONCLICK )
     async function getBoardUsers(id) {
         let result = await apiHelper.getRequest(`get-board-users?board_id=${id}`)
         if (result?.code === DEVELOPMENT_CONFIG.statusCode) {
@@ -175,30 +196,74 @@ export default function Dashbord() {
     }
 
     const handleToggleBoardUsers = async () => {
-        if (!!dashbordCID) {
-            getBoardUsers(dashbordCID)
+        if (isLogin) {
+            if (!!dashbordCID) {
+                getBoardUsers(dashbordCID)
+            }
+            setIsBoardUsers(!isBoardUsers)
         }
-        setIsBoardUsers(!isBoardUsers)
     }
 
+    // GET MESSAGES ( ON HANDLE JOIN CHAT )
+    async function getMessages(chatId) {
+        let result = await apiHelper.getRequest(`get-messages?chat_id=${chatId}`)
+        if (result?.code === DEVELOPMENT_CONFIG.statusCode) {
+            setMessages(result?.body);
+        } else {
+            setMessages([])
+        }
+    }
+
+    // JOIN CHAT WITH USER ( WITH USER )
     const handleJoinChat = async (e, value) => {
         e.preventDefault();
+        setIsBoardUsers(false)
         setIsChatbox(true)
+        setChatUserDetail(value) //receiver data
         let data = JSON.stringify({
             user_2: value?.id
         })
         let result = await apiHelper.postRequest("create-new-chat", data)
         if (result?.code === DEVELOPMENT_CONFIG.statusCode) {
-            console.log("result : ", result)
+            setChatId(result?.body?.id);
+            socket.emit("join_chat", result?.body?.id);
+            await getMessages(result?.body?.id)
+        } else {
+            setChatId(null);
         }
     }
 
-    // const joinChat = () => {
-    //     // if (username !== "" && room !== "") {
-    //     socket.emit("join_chat");
-    //     // setShowChat(true)
-    //     // }
-    // };
+    // SEND MESSAGE
+    const sendMessage = async (e) => {
+        e.preventDefault();
+        if (!chatId || !message) return;
+
+        let data = JSON.stringify({
+            chat_id: chatId,
+            message,
+        });
+        let result = await apiHelper.postRequest("send-message", data);
+        if (result?.code === DEVELOPMENT_CONFIG.statusCode) {
+            await socket.emit("send_message", result?.body);
+            setMessage("");
+            // setMessages((prev) => [...prev, result?.body]);
+
+            // if (sticky) {
+            //     scrollToBottom();
+            // }
+        } else { }
+    };
+
+    // RECEIVE MESSAGE SOCKET
+    useEffect(() => {
+        socket.on("receive_message", (data) => {
+            setMessages((prev) => [...prev, data]);
+        });
+
+        return () => {
+            socket.off("receive_message");
+        };
+    }, []);
 
     return (
         <>
@@ -225,9 +290,24 @@ export default function Dashbord() {
                         >
                             <UsersRound size={16} strokeWidth={2.5} />
                         </button>
+                        {/*  USERS BOARD */}
                         {isBoardUsers && (
-                            <div className="absolute h-fit w-64 top-8 right-0 bg-white border rounded shadow-md p-3">
-                                <h3 className="text-gray-700 text-lg border-b border-b-gray-300">All Board Users</h3>
+                            <div className="absolute min-h-92 w-92 top-8 right-0 bg-white border rounded-lg shadow-md p-3">
+                                <div className="flex items-center justify-between p-1 text-gray-700 text-lg border-b border-b-gray-300">
+                                    <h3 className="">All Board Users</h3>
+                                    <div className="flex items-center gap-2">
+                                        <button className="flex items-center text-sm bg-gray-200 gap-1 hover:bg-gray-300 rounded cursor-pointer p-1">
+                                            <span>Group Chat</span>
+                                            <span><MessagesSquare size={14} /></span>
+                                        </button>
+                                        <button
+                                            className="hover:bg-gray-300 rounded cursor-pointer p-1.5"
+                                            onClick={() => setIsBoardUsers(false)}
+                                        >
+                                            < X size={18} strokeWidth={2.5} />
+                                        </button>
+                                    </div>
+                                </div>
                                 {!!boardUsers && boardUsers.length > 0 && (
                                     <ul className="text-gray-600 text-sm mt-3 max-h-72 flex flex-col gap-2 overflow-y-auto overflow-x-hidden custom-scrollbar">
                                         {boardUsers?.map((value) => (
@@ -235,12 +315,68 @@ export default function Dashbord() {
                                                 key={value.id}
                                                 className="p-2 rounded cursor-pointer hover:bg-gray-200"
                                                 onClick={(e) => handleJoinChat(e, value)}
-                                            >{value.name}</li>
+                                            >{value.name}{" "}{value?.id == loggedInUser ? "( You )" : ""}</li>
                                         ))}
                                     </ul>
                                 )}
                             </div>
                         )}
+
+                        {/* CHAT BOT */}
+                        {!!isChatbox && (
+                            <div className="absolute min-h-92 w-92 top-8 right-0 bg-green-50 border border-green-200 rounded-lg shadow-md p-1">
+                                <div className="flex flex-col text-gray-600 gap-1 h-92">
+                                    <div className="flex items-center justify-between p-1">
+                                        <span className={`text-sm font-semibold`}>
+                                            {chatUserDetail?.name}{" "}{chatUserDetail?.id == loggedInUser ? "( You )" : ""}
+                                        </span>
+                                        <button
+                                            className="hover:bg-gray-300 rounded cursor-pointer p-1"
+                                            onClick={() => setIsChatbox(false)}
+                                        >
+                                            < X size={18} strokeWidth={2.5} />
+                                        </button>
+                                    </div>
+                                    <div className="flex-1 overflow-y-auto p-1">
+                                        {!!messages && messages.length > 0 && (
+                                            <ScrollToBottom className="h-full">
+                                                <ul className="flex flex-col gap-2 p-2">
+                                                    {messages?.map((value) => (
+                                                        < li key={value.id} className={`w-fit max-w-60 px-1 border border-gray-200 rounded-lg ${value?.sender_id == loggedInUser ? "self-end bg-green-200" : "bg-gray-200"}`}>
+                                                            <span className="text-sm font-medium text-gray-700">{value.message}</span>
+                                                        </li>
+                                                    ))}
+                                                </ul>
+                                            </ScrollToBottom>
+                                        )}
+                                    </div>
+
+                                    <div className="flex items-center justify-between gap-2">
+                                        <input
+                                            className="rounded-full border w-full border-green-400 bg-white text-sm font-medium text-gray-700 p-2 ring-1 ring-transparent focus:ring-green-500 focus:border-green-500 outline-none transition"
+                                            type="text"
+                                            value={message}
+                                            placeholder="Enter Message"
+                                            onChange={(event) => {
+                                                setMessage(event.target.value);
+                                            }}
+                                            onKeyDown={(e) => {
+                                                if (e.key === "Enter") {
+                                                    e.preventDefault();
+                                                    sendMessage(e);
+                                                }
+                                            }}
+                                        />
+                                        <button className="h-10 w-10 px-2.5 rounded-full border border-green-400 hover:border-2 hover:border-green-500 bg-green-300 cursor-pointer"
+                                            onClick={sendMessage}
+                                        >
+                                            <SendHorizontal size={20} />
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
                         <button className="flex items-center gap-1 cursor-pointer text-sm font-semibold bg-amber-50 text-gray-700 px-2.5 py-2 rounded">
                             <Columns2 size={15} strokeWidth={2.5} />
                             <span className="">Board</span>
@@ -265,11 +401,19 @@ export default function Dashbord() {
                         </button>
                         {isNotificationOpen && (
                             <div className="absolute h-92 w-80 top-8 left-2 bg-white border rounded shadow-md p-3">
-                                <h3 className="text-gray-700 text-lg border-b border-b-gray-300">Notifications</h3>
+                                <div className="flex items-center justify-between p-1 text-gray-700 text-lg border-b border-b-gray-300">
+                                    <h3>Notifications</h3>
+                                    <button
+                                        className="hover:bg-gray-300 rounded cursor-pointer p-1"
+                                        onClick={() => setIsNotificationOpen(false)}
+                                    >
+                                        < X size={18} strokeWidth={2.5} />
+                                    </button>
+                                </div>
                                 {allNotification && allNotification.length > 0 ?
                                     (
                                         <ul className="text-gray-600 text-sm mt-3 max-h-72 flex flex-col gap-2 overflow-y-auto overflow-x-hidden custom-scrollbar">
-                                            {allNotification.map((value) => (
+                                            {allNotification?.map((value) => (
                                                 < li key={value.id} className="border border-gray-200 p-2 rounded" >{value.message}</li>
                                             ))
                                             }
@@ -293,7 +437,7 @@ export default function Dashbord() {
                         {isMenuOpen && (
                             <div className="absolute top-8 right-0 bg-white border rounded shadow-md p-2">
                                 <button
-                                    className="text-gray-500 bg-gray-200 text-base px-3 py-1 rounded hover:bg-gray-300"
+                                    className="text-gray-500 bg-gray-200 text-base px-3 py-1 rounded hover:bg-gray-300 cursor-pointer"
                                     onClick={handleLogOut}
                                 >
                                     Logout
@@ -371,41 +515,6 @@ export default function Dashbord() {
                                 </div>
                             )}
                         </>
-                    )}
-
-                    {/* CHAT BOT */}
-                    {!!isChatbox && (
-                        <div className="fixed min-h-92 w-92 mt-16 top-10 right-10 bg-green-50 border border-green-200 rounded-lg shadow-md p-1">
-                            <div className="flex flex-col text-gray-600 gap-1 h-92">
-
-                                <div className="flex items-center justify-between p-1">
-                                    <span className="text-sm font-semibold">USER NAME</span>
-                                    <button
-                                        className="cursor-pointer"
-                                        onClick={() => setIsChatbox(false)}
-                                    >
-                                        < X size={18} strokeWidth={2.5} />
-                                    </button>
-                                </div>
-
-                                <div className="flex-1 overflow-y-auto p-2">{"User"}</div >
-
-                                <div className="flex items-center justify-between gap-2" >
-                                    <input
-                                        className="rounded-full border w-full border-green-400 bg-white text-sm font-medium p-2 ring-1 ring-transparent focus:ring-green-500 focus:border-green-500 outline-none transition"
-                                        type="text"
-                                        value={message}
-                                        placeholder="Enter Message"
-                                        onChange={(event) => {
-                                            setMessage(event.target.value);
-                                        }}
-                                    />
-                                    <button className="h-10 w-10 px-2.5 rounded-full border border-green-400 hover:border-2 hover:border-green-500 bg-green-300">
-                                        <SendHorizontal size={20} />
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
                     )}
                 </div>
             </div >
