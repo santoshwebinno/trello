@@ -46,8 +46,9 @@ export default function Dashbord() {
 
     const [chatUserDetail, setChatUserDetail] = useState({})
     const [message, setMessage] = useState("");
-    const [chatId, setChatId] = useState(null);
     const [messages, setMessages] = useState([]);
+
+    const [chatRoomId, setChatRoomId] = useState(null);
 
     const listRef = useRef(null);
 
@@ -155,6 +156,7 @@ export default function Dashbord() {
         localStorage.removeItem("loggedInUser")
         setBoardData([])
         setDashbordDataObj({})
+        setIsBoardUsers(false)
         setIsChatbox(false)
         setIsNotificationOpen(false)
     }
@@ -195,18 +197,21 @@ export default function Dashbord() {
         }
     }
 
+    useEffect(() => {
+        getBoardUsers(dashbordCID)
+    }, [dashbordCID])
+
     const handleToggleBoardUsers = async () => {
         if (isLogin) {
-            if (!!dashbordCID) {
-                getBoardUsers(dashbordCID)
-            }
+            // if (isLogin && !!dashbordCID) {
+            // getBoardUsers(dashbordCID)
             setIsBoardUsers(!isBoardUsers)
         }
     }
 
     // GET MESSAGES ( ON HANDLE JOIN CHAT )
     async function getMessages(chatId) {
-        let result = await apiHelper.getRequest(`get-messages?chat_id=${chatId}`)
+        let result = await apiHelper.getRequest(`get-chat-room-messages?chat_room_id=${chatId}`) //FOR GROUP CHAT
         if (result?.code === DEVELOPMENT_CONFIG.statusCode) {
             setMessages(result?.body);
         } else {
@@ -214,40 +219,63 @@ export default function Dashbord() {
         }
     }
 
-    // JOIN CHAT WITH USER ( WITH USER )
-    const handleJoinChat = async (e, value) => {
-        e.preventDefault();
-        setIsBoardUsers(false)
-        setIsChatbox(true)
-        setChatUserDetail(value) //receiver data
-        let data = JSON.stringify({
-            user_2: value?.id
-        })
-        let result = await apiHelper.postRequest("create-new-chat", data)
-        if (result?.code === DEVELOPMENT_CONFIG.statusCode) {
-            setChatId(result?.body?.id);
-            socket.emit("join_chat", result?.body?.id);
-            await getMessages(result?.body?.id)
-        } else {
-            setChatId(null);
+    const handleSingleChat = async (e, value) => {
+        let configData = {
+            is_group: false,
+            group_name: "",
+            group_board_id: "", // null
+            group_users: [],
+            user_2: value?.id,
         }
+        setChatUserDetail(value) // receiver data
+        await handleCreateChatRoom(e, configData)
     }
+
+    const handleGroupChat = async (e) => {
+        let configData = {
+            is_group: true,
+            group_name: dashbordDataObj?.title,
+            group_board_id: dashbordDataObj?.id,
+            group_users: boardUsers,
+            user_1: "",
+            user_2: "",
+        }
+        setChatUserDetail({ name: dashbordDataObj?.title }) // group title
+        await handleCreateChatRoom(e, configData)
+    }
+
+    // GROUP CHAT AND SINGLE CHAT
+    const handleCreateChatRoom = async (e, configData) => {
+        e.preventDefault();
+        // setIsBoardUsers(false)
+        // setIsChatbox(true)
+        let data = JSON.stringify({ configData });
+        let result = await apiHelper.postRequest("create-chat-room", data);
+        if (result?.code == DEVELOPMENT_CONFIG.statusCode) {
+            await getMessages(result?.body?.id)
+            setIsBoardUsers(false)
+            setIsChatbox(true)
+            setChatRoomId(result?.body?.id);
+            socket.emit("join_chat", result?.body?.id);
+        }
+        else {
+            setChatRoomId(null);
+        }
+    };
 
     // SEND MESSAGE
     const sendMessage = async (e) => {
         e.preventDefault();
-        if (!chatId || !message) return;
+        if (!chatRoomId || !message) return;
 
         let data = JSON.stringify({
-            chat_id: chatId,
+            chat_room_id: chatRoomId,
             message,
         });
-        let result = await apiHelper.postRequest("send-message", data);
+        let result = await apiHelper.postRequest("send-chat-message", data);
         if (result?.code === DEVELOPMENT_CONFIG.statusCode) {
             await socket.emit("send_message", result?.body);
             setMessage("");
-            // setMessages((prev) => [...prev, result?.body]);
-
             // if (sticky) {
             //     scrollToBottom();
             // }
@@ -257,13 +285,17 @@ export default function Dashbord() {
     // RECEIVE MESSAGE SOCKET
     useEffect(() => {
         socket.on("receive_message", (data) => {
-            setMessages((prev) => [...prev, data]);
+            if (data.chat_room_id === chatRoomId) {
+                setMessages((prev) => {
+                    return [...prev, data];
+                });
+            }
         });
 
         return () => {
             socket.off("receive_message");
         };
-    }, []);
+    }, [chatRoomId]);
 
     return (
         <>
@@ -296,7 +328,10 @@ export default function Dashbord() {
                                 <div className="flex items-center justify-between p-1 text-gray-700 text-lg border-b border-b-gray-300">
                                     <h3 className="">All Board Users</h3>
                                     <div className="flex items-center gap-2">
-                                        <button className="flex items-center text-sm bg-gray-200 gap-1 hover:bg-gray-300 rounded cursor-pointer p-1">
+                                        <button
+                                            className="flex items-center text-sm bg-gray-200 gap-1 hover:bg-gray-300 rounded cursor-pointer p-1"
+                                            onClick={handleGroupChat}
+                                        >
                                             <span>Group Chat</span>
                                             <span><MessagesSquare size={14} /></span>
                                         </button>
@@ -314,7 +349,7 @@ export default function Dashbord() {
                                             <li
                                                 key={value.id}
                                                 className="p-2 rounded cursor-pointer hover:bg-gray-200"
-                                                onClick={(e) => handleJoinChat(e, value)}
+                                                onClick={(e) => handleSingleChat(e, value)}
                                             >{value.name}{" "}{value?.id == loggedInUser ? "( You )" : ""}</li>
                                         ))}
                                     </ul>
@@ -322,7 +357,7 @@ export default function Dashbord() {
                             </div>
                         )}
 
-                        {/* CHAT BOT */}
+                        {/* CHAT BOT SINGLE USER */}
                         {!!isChatbox && (
                             <div className="absolute min-h-92 w-92 top-8 right-0 bg-green-50 border border-green-200 rounded-lg shadow-md p-1">
                                 <div className="flex flex-col text-gray-600 gap-1 h-92">
@@ -332,7 +367,10 @@ export default function Dashbord() {
                                         </span>
                                         <button
                                             className="hover:bg-gray-300 rounded cursor-pointer p-1"
-                                            onClick={() => setIsChatbox(false)}
+                                            onClick={() => {
+                                                setIsChatbox(false)
+                                                setIsBoardUsers(true)
+                                            }}
                                         >
                                             < X size={18} strokeWidth={2.5} />
                                         </button>
