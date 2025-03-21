@@ -84,10 +84,7 @@ export default function Description() {
     let result = await apiHelper.postRequest("update-child-card-description", data);
     if (result?.code === DEVELOPMENT_CONFIG.statusCode) {
       handleCloseDescriptionBoard();
-      console.log("MESSAGE IF : ", result.message);
-    } else {
-      console.log("MESSAGE ELSE : ", result.message);
-    }
+    } else { }
   };
 
   async function screenShot() {
@@ -96,10 +93,7 @@ export default function Description() {
     })
     let result = await apiHelper.postRequest("screen-shot", data)
     if (result?.code === DEVELOPMENT_CONFIG.statusCode) {
-      console.log("MESSAGE IF : ", result?.message)
-    } else {
-      console.log("MESSAGE ELSE : ", result?.message)
-    }
+    } else { }
   }
 
   const handleHideShowTimer = (cardId) => {
@@ -202,7 +196,6 @@ export default function Description() {
           showTimer: false
         },
       }));
-      console.log("MESSAGE IF : ", result?.message);
     } else {
       setTimers((prevTimers) => ({
         ...prevTimers,
@@ -213,7 +206,6 @@ export default function Description() {
           showTimer: false // check
         },
       }));
-      console.log("MESSAGE ELSE : ", result?.message);
     }
   }
 
@@ -386,7 +378,7 @@ export default function Description() {
                         <span className="text-xs font-semibold rounded-full w-6 h-6 flex items-center justify-center text-black bg-blue-500">
                           {firstLetter}
                         </span>
-                        <progress className="h-2 bg-gray-300 rounded w-full" value={totalTime} max="1440"></progress>
+                        <progress className="h-2 bg-gray-300 rounded w-full" value={totalTime} max="43200"></progress>
                         <span className="text-xs text-gray-500">{formatTime(totalTime)}</span>
                       </div>
 

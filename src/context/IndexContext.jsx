@@ -72,10 +72,7 @@ export default function ContextProvider({ children }) {
                     is_checked: newStatus,
                 },
             }));
-            console.log("MESSAGE IF : ", result?.message);
-        } else {
-            console.log("MESSAGE ELSE : ", result?.message);
-        }
+        } else { }
     };
 
     const handleValidation = () => {
@@ -104,10 +101,7 @@ export default function ContextProvider({ children }) {
                     title: title,
                 },
             }));
-            console.log("MESSAGE IF : ", result.message);
-        } else {
-            console.log("MESSAGE ELSE : ", result.message);
-        }
+        } else { }
     };
 
     return (

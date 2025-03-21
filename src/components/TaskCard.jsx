@@ -121,10 +121,7 @@ export default function TaskCard({ id, values }) {
       //   ...prev,
       //   title: listCard.title,
       // }));
-      console.log("MESSAGE IF : ", result.message);
-    } else {
-      console.log("MESSAGE ELSE : ", result.message);
-    }
+    } else { }
   };
 
   // HANDLE MIN OR MAX
@@ -132,18 +129,7 @@ export default function TaskCard({ id, values }) {
     e.preventDefault();
     const newStatus = !isClose;
     setIsClose(newStatus);
-    // let data = JSON.stringify({
-    //   id,
-    //   newStatus
-    // })
-    // let result = await apiHelper.postRequest("min-max", data)
-    // if (result?.code === DEVELOPMENT_CONFIG.statusCode) {
-    //   setIsClose(newStatus)
-    //   console.log("MESSAGE IF : ", result.message)
-    // }
-    // else {
-    //   console.log("MESSAGE ELSE : ", result.message)
-    // }
+    // LOCAL STORAGE
   }
 
   return (

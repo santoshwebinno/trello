@@ -198,11 +198,13 @@ export default function Dashbord() {
     }
 
     useEffect(() => {
-        getBoardUsers(dashbordCID)
+        if (!!isLogin && !!dashbordCID) {
+            getBoardUsers(dashbordCID)
+        }
     }, [dashbordCID])
 
     const handleToggleBoardUsers = async () => {
-        if (isLogin) {
+        if (!!isLogin) {
             // if (isLogin && !!dashbordCID) {
             // getBoardUsers(dashbordCID)
             setIsBoardUsers(!isBoardUsers)
@@ -232,6 +234,7 @@ export default function Dashbord() {
     }
 
     const handleGroupChat = async (e) => {
+        if (!boardUsers?.length > 0) return
         let configData = {
             is_group: true,
             group_name: dashbordDataObj?.title,
@@ -357,7 +360,7 @@ export default function Dashbord() {
                             </div>
                         )}
 
-                        {/* CHAT BOT SINGLE USER */}
+                        {/* CHAT BOT */}
                         {!!isChatbox && (
                             <div className="absolute min-h-92 w-92 top-8 right-0 bg-green-50 border border-green-200 rounded-lg shadow-md p-1">
                                 <div className="flex flex-col text-gray-600 gap-1 h-92">
@@ -370,6 +373,7 @@ export default function Dashbord() {
                                             onClick={() => {
                                                 setIsChatbox(false)
                                                 setIsBoardUsers(true)
+                                                setMessage("")
                                             }}
                                         >
                                             < X size={18} strokeWidth={2.5} />
@@ -380,15 +384,15 @@ export default function Dashbord() {
                                             <ScrollToBottom className="h-full">
                                                 <ul className="flex flex-col gap-2 p-2">
                                                     {messages?.map((value) => (
-                                                        < li key={value.id} className={`w-fit max-w-60 px-1 border border-gray-200 rounded-lg ${value?.sender_id == loggedInUser ? "self-end bg-green-200" : "bg-gray-200"}`}>
-                                                            <span className="text-sm font-medium text-gray-700">{value.message}</span>
+                                                        < li key={value.id} className={`w-36 flex flex-col max-w-60 px-1 border border-gray-200 rounded-lg ${value.sender_id == loggedInUser ? "self-end bg-green-200" : "bg-gray-200"}`}>
+                                                            <span className="text-xs font-medium text-gray-700 self-start border-b-1 border-gray-300 mb-1">{value?.sender_id == loggedInUser ? "" : value.sender_name}</span>
+                                                            <span className="text-sm font-medium text-gray-700 text-right">{value.message}</span>
                                                         </li>
                                                     ))}
                                                 </ul>
                                             </ScrollToBottom>
                                         )}
                                     </div>
-
                                     <div className="flex items-center justify-between gap-2">
                                         <input
                                             className="rounded-full border w-full border-green-400 bg-white text-sm font-medium text-gray-700 p-2 ring-1 ring-transparent focus:ring-green-500 focus:border-green-500 outline-none transition"

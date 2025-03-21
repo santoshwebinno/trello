@@ -32,7 +32,6 @@ export default function SideBar() {
     localStorage.removeItem("sideBarStatus");
     localStorage.removeItem("loggedInUser");
   }
-  // console.log(`<<<<< ${isLogin} >>>>>`)
 
   const [isSidebarOpen, setIsSidebarOpen] = useState(sideBarStatus);
   const handleOpenSideBarModal = async (e) => {
