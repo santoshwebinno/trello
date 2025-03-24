@@ -23,9 +23,9 @@ import { toast, ToastContainer } from "react-toastify";
 import ChildCard from "../components/ChildCard";
 import io from "socket.io-client"
 import ScrollToBottom, { useScrollToBottom, useSticky } from "react-scroll-to-bottom";
+import { Badge } from "@mui/material";
 
 const socket = io.connect("http://localhost:4321")
-
 
 export default function Dashbord() {
     const [newListCard, setNewListCard] = useState(false);
@@ -49,6 +49,8 @@ export default function Dashbord() {
     const [messages, setMessages] = useState([]);
 
     const [chatRoomId, setChatRoomId] = useState(null);
+
+    const [notificationCount, setNotificationCount] = useState(0);
 
     const listRef = useRef(null);
 
@@ -165,9 +167,14 @@ export default function Dashbord() {
     async function getNotification() {
         let result = await apiHelper.getRequest("get-notification")
         if (result?.code === DEVELOPMENT_CONFIG.statusCode) {
-            setAllNotification(result?.body)
+            setAllNotification(result?.body);
+            const notifications = result?.body?.reduce((acc, current) => {
+                return acc + (current?.is_viewed ? 0 : 1);
+            }, 0);
+            setNotificationCount(notifications);
         } else {
-            setAllNotification([])
+            setAllNotification([]);
+            setNotificationCount(0);
         }
     }
 
@@ -178,16 +185,74 @@ export default function Dashbord() {
         }
     }
 
+    useEffect(() => {
+        socket.on("receive_notification", (data) => {
+            if (data.reciver_id == loggedInUser) {
+                const notifications = data?.is_viewed ? 0 : 1;
+                setAllNotification((prev) => [data, ...prev]);
+                setNotificationCount((prev) => prev + notifications);
+            }
+        });
+
+        return () => {
+            socket.off("receive_notification");
+        };
+    }, []);
+
+    const handleAcceptInvite = async (e, value) => {
+        e.preventDefault();
+        if (!value.board_id || !value.reciver_id) return;
+
+        let data = JSON.stringify({
+            board_id: value.board_id,
+            collaborators_id: value.reciver_id,
+        });
+        let result = await apiHelper.postRequest("accept-invite", data);
+        if (result?.code === DEVELOPMENT_CONFIG.statusCode) {
+            await socket.emit("send_notification", result?.body?.notification);
+            getNotification();
+            setBoardData((prev) => [...prev, result?.body?.board]);
+            success(result.message);
+        }
+    };
+
+    const handleRejectInvite = async (e, value) => {
+        e.preventDefault();
+        if (!value.board_id || !value.reciver_id) return;
+
+        let data = JSON.stringify({
+            board_id: value.board_id,
+            collaborators_id: value.reciver_id,
+        });
+        let result = await apiHelper.postRequest("reject-invite", data);
+        if (result?.code === DEVELOPMENT_CONFIG.statusCode) {
+            await socket.emit("send_notification", result?.body);
+            getNotification();
+            success(result.message);
+        }
+    };
+
+    const handleViewed = async (e, value) => {
+        e.preventDefault();
+        if (value.is_viewed == true) return;
+        let result = await apiHelper.postRequest(
+            `update-notofication-status?notf_if=${value.id}`
+        );
+        if (result?.code === DEVELOPMENT_CONFIG.statusCode) {
+            getNotification();
+        }
+    };
+
     // CLOSE 3 POP-UPS
     const handleCloseAll = (e) => {
         if (!e.currentTarget.contains(e.relatedTarget)) {
             // setIsBoardUsers(false);
-            setIsNotificationOpen(false);
+            // setIsNotificationOpen(false);
             setIsMenuOpen(false);
         }
     }
 
-    // GET BOARD USERS ( ONCLICK )
+    // GET BOARD USERS ( ON dashbordCID)
     async function getBoardUsers(id) {
         let result = await apiHelper.getRequest(`get-board-users?board_id=${id}`)
         if (result?.code === DEVELOPMENT_CONFIG.statusCode) {
@@ -205,8 +270,6 @@ export default function Dashbord() {
 
     const handleToggleBoardUsers = async () => {
         if (!!isLogin) {
-            // if (isLogin && !!dashbordCID) {
-            // getBoardUsers(dashbordCID)
             setIsBoardUsers(!isBoardUsers)
         }
     }
@@ -234,7 +297,7 @@ export default function Dashbord() {
     }
 
     const handleGroupChat = async (e) => {
-        if (!boardUsers?.length > 0) return
+        if (!boardUsers?.length > 0) return // object
         let configData = {
             is_group: true,
             group_name: dashbordDataObj?.title,
@@ -440,6 +503,20 @@ export default function Dashbord() {
                             onClick={handleToggleNotifications}
                         >
                             <Bell size={15} strokeWidth={2.5} />
+                            <Badge
+                                badgeContent={notificationCount}
+                                color="success"
+                                sx={{
+                                    "& .MuiBadge-badge": {
+                                        backgroundColor: "green",
+                                        color: "white",
+                                        fontSize: "10px",
+                                        fontWeight: "bold",
+                                        height: "16px",
+                                        minWidth: "14px",
+                                    },
+                                }}
+                            />
                         </button>
                         {isNotificationOpen && (
                             <div className="absolute h-92 w-80 top-8 left-2 bg-white border rounded shadow-md p-3">
@@ -449,23 +526,53 @@ export default function Dashbord() {
                                         className="hover:bg-gray-300 rounded cursor-pointer p-1"
                                         onClick={() => setIsNotificationOpen(false)}
                                     >
-                                        < X size={18} strokeWidth={2.5} />
+                                        <X size={18} strokeWidth={2.5} />
                                     </button>
                                 </div>
-                                {allNotification && allNotification.length > 0 ?
-                                    (
-                                        <ul className="text-gray-600 text-sm mt-3 max-h-72 flex flex-col gap-2 overflow-y-auto overflow-x-hidden custom-scrollbar">
-                                            {allNotification?.map((value) => (
-                                                < li key={value.id} className="border border-gray-200 p-2 rounded" >{value.message}</li>
-                                            ))
-                                            }
-                                        </ul>
-                                    ) : (
-                                        <div className="h-72 flex items-center justify-center">
-                                            <p className="text-gray-700 text-lg ">No Notification</p>
-                                        </div>
-                                    )
-                                }
+                                {allNotification && allNotification.length > 0 ? (
+                                    <ul className="text-gray-600 text-sm mt-3 max-h-72 flex flex-col gap-2 overflow-y-auto overflow-x-hidden custom-scrollbar">
+                                        {allNotification?.map((value) => (
+                                            <li
+                                                key={value.id}
+                                                className={`flex flex-col border border-gray-200 p-2 rounded gap-2 cursor-pointer ${!!value.is_viewed ? "" : "bg-gray-200"
+                                                    }`}
+                                                onClick={(e) => handleViewed(e, value)}
+                                            >
+                                                <div>{value.message}</div>
+                                                <>
+                                                    {!!value.is_reject && (
+                                                        <div className="text-xs text-red-500">Rejected</div>
+                                                    )}
+                                                    {!!value.is_accept && (
+                                                        <div className="text-xs text-green-500">
+                                                            Accepted
+                                                        </div>
+                                                    )}
+                                                    {value.invitation && (
+                                                        <div className="flex gap-2">
+                                                            <button
+                                                                className="w-28 p-1 bg-red-600 rounded text-white cursor-pointer"
+                                                                onClick={(e) => handleRejectInvite(e, value)}
+                                                            >
+                                                                Reject
+                                                            </button>
+                                                            <button
+                                                                className="w-28 p-1 bg-green-600 rounded text-white cursor-pointer"
+                                                                onClick={(e) => handleAcceptInvite(e, value)}
+                                                            >
+                                                                Accept
+                                                            </button>
+                                                        </div>
+                                                    )}
+                                                </>
+                                            </li>
+                                        ))}
+                                    </ul>
+                                ) : (
+                                    <div className="h-72 flex items-center justify-center">
+                                        <p className="text-gray-700 text-lg ">No Notification</p>
+                                    </div>
+                                )}
                             </div>
                         )}
                         <button className="hover:bg-[#948ab7] rounded p-1 w-6 cursor-pointer">
@@ -566,3 +673,5 @@ export default function Dashbord() {
         </>
     );
 }
+
+export { socket };

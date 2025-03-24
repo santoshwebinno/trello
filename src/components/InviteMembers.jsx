@@ -5,6 +5,7 @@ import { X, Link } from "lucide-react";
 import apiHelper from "../helpers/api-helper";
 import DEVELOPMENT_CONFIG from "../helpers/config";
 import { toast } from "react-toastify";
+import { socket } from "../pages/Dashbord";
 
 const style = {
     position: "absolute",
@@ -46,8 +47,9 @@ export default function InviteMembers({ openInvite, setOpenInvite }) {
             board_id: dashbordCID,
             collaborator_email: email
         })
-        let result = await apiHelper.postRequest("collaborator-access", data)
+        let result = await apiHelper.postRequest("invite-collaborator", data)
         if (result?.code === DEVELOPMENT_CONFIG.statusCode) {
+            await socket.emit("send_notification", result?.body);
             handleClose()
             setEmail("")
             setError("")

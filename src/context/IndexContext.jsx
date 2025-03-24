@@ -50,7 +50,7 @@ export default function ContextProvider({ children }) {
             setOpenDescription(true)
             setChildCardDetails(result?.body)
         } else {
-            setOpenDescription(true)
+            setOpenDescription(false)
             setChildCardDetails({})
         }
     })
