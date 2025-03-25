@@ -134,7 +134,7 @@ export default function Dashbord() {
 
             // UPDATE PARENT OF CHILD CARD
             const data = JSON.stringify({
-                id: taskId,
+                c_id: taskId,
                 dashbord_c_id: newStatus,
             });
             let result = await apiHelper.postRequest("update-child-card", data);
@@ -180,7 +180,6 @@ export default function Dashbord() {
 
     const handleToggleNotifications = () => {
         if (isLogin) {
-            getNotification()
             setIsNotificationOpen(!isNotificationOpen);
         }
     }
@@ -236,7 +235,7 @@ export default function Dashbord() {
         e.preventDefault();
         if (value.is_viewed == true) return;
         let result = await apiHelper.postRequest(
-            `update-notofication-status?notf_if=${value.id}`
+            `update-notofication-status?notf_id=${value.id}`
         );
         if (result?.code === DEVELOPMENT_CONFIG.statusCode) {
             getNotification();
@@ -263,8 +262,11 @@ export default function Dashbord() {
     }
 
     useEffect(() => {
-        if (!!isLogin && !!dashbordCID) {
-            getBoardUsers(dashbordCID)
+        if (!!isLogin) {
+            getNotification()
+            if (!!dashbordCID) {
+                getBoardUsers(dashbordCID)
+            }
         }
     }, [dashbordCID])
 
@@ -288,7 +290,7 @@ export default function Dashbord() {
         let configData = {
             is_group: false,
             group_name: "",
-            group_board_id: "", // null
+            board_id: "", // null
             group_users: [],
             user_2: value?.id,
         }
@@ -301,7 +303,7 @@ export default function Dashbord() {
         let configData = {
             is_group: true,
             group_name: dashbordDataObj?.title,
-            group_board_id: dashbordDataObj?.id,
+            board_id: dashbordDataObj?.id,
             group_users: boardUsers,
             user_1: "",
             user_2: "",
@@ -498,8 +500,8 @@ export default function Dashbord() {
                             <ChevronDown size={15} strokeWidth={2.5} />
                         </button>
                     </div>
-                    <div className=" flex items-center gap-2 relative" tabIndex={0} onBlur={handleCloseAll}>
-                        <button className="hover:bg-[#948ab7] rounded p-1 w-6 cursor-pointer"
+                    <div className="flex items-center gap-2 relative" tabIndex={0} onBlur={handleCloseAll}>
+                        <button className="flex hover:bg-[#948ab7] rounded p-1 w-6 cursor-pointer"
                             onClick={handleToggleNotifications}
                         >
                             <Bell size={15} strokeWidth={2.5} />

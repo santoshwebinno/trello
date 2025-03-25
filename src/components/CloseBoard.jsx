@@ -6,6 +6,7 @@ import { Link } from "react-router-dom";
 import apiHelper from "../helpers/api-helper";
 import DEVELOPMENT_CONFIG from "../helpers/config";
 import { useIndexContext } from "../context/IndexContext";
+import { toast } from "react-toastify";
 
 const style = {
   position: "absolute",
@@ -28,6 +29,19 @@ function ChildModal({ openChild, setOpenChild, setOpen, boardData }) {
     setOpen(true);
   };
 
+  const success = (msg) => {
+    toast.success(msg,
+      {
+        autoClose: 5000,
+      });
+  }
+  const error = (msg) => {
+    toast.success(msg,
+      {
+        autoClose: 5000,
+      });
+  }
+
   const handleCloseBoard = async (e, id) => {
     e.preventDefault();
     let data = JSON.stringify({});
@@ -40,8 +54,10 @@ function ChildModal({ openChild, setOpenChild, setOpen, boardData }) {
       handleCloseChild();
       localStorage.removeItem("dashbordCID");
       getBoards();
+      success(result.message)
     } else {
       handleCloseChild();
+      error(result.message)
     }
   };
 
@@ -130,9 +146,8 @@ export default function CloseBoard({ boardTitle, open, setOpen, removeBoard }) {
                     {sortOptions.map((option) => (
                       <button
                         key={option}
-                        className={`w-full text-left p-2 text-sm text-gray-600 hover:bg-gray-100 cursor-pointer ${
-                          visibility === option ? "bg-gray-200" : ""
-                        }`}
+                        className={`w-full text-left p-2 text-sm text-gray-600 hover:bg-gray-100 cursor-pointer ${visibility === option ? "bg-gray-200" : ""
+                          }`}
                         onClick={() => {
                           setVisibility(option);
                           setDropdownOpen(false);

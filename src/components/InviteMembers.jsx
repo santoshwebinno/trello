@@ -44,10 +44,11 @@ export default function InviteMembers({ openInvite, setOpenInvite }) {
         setError("");
 
         let data = JSON.stringify({
-            board_id: dashbordCID,
+            // board_id: dashbordCID,
             collaborator_email: email
         })
-        let result = await apiHelper.postRequest("invite-collaborator", data)
+        // let result = await apiHelper.postRequest("invite-collaborator", data)
+        let result = await apiHelper.postRequest(`invite-collaborator?board_id=${dashbordCID}`, data)
         if (result?.code === DEVELOPMENT_CONFIG.statusCode) {
             await socket.emit("send_notification", result?.body);
             handleClose()

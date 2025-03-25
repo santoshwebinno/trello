@@ -16,7 +16,7 @@ export default function ContextProvider({ children }) {
     const handleOnDashbord = (async (id) => {
         console.log("Enter in handle===========OnDashbord context")
         localStorage.setItem("dashbordCID", id)
-        let result = await apiHelper.getRequest(`display-board?b_id=${id}`)
+        let result = await apiHelper.getRequest(`display-board?board_id=${id}`)
         if (result?.code === DEVELOPMENT_CONFIG.statusCode) {
             setDashbordDataObj(result?.body)
         } else {
@@ -60,7 +60,7 @@ export default function ContextProvider({ children }) {
         e.preventDefault();
         const newStatus = !childCardDetails?.history?.is_checked;
         let data = JSON.stringify({
-            id,
+            c_id: id,
             is_checked: newStatus,
         });
         let result = await apiHelper.postRequest("update-child-card-status", data);

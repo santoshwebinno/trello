@@ -27,9 +27,9 @@ export default {
             })
             .catch((error) => {
                 // CHECK ( OR SEND NETWORK ERROR )
-                // console.log("CCC")
-                return error
-                // return error.response.data
+                // console.log("CCC", error)
+                // return error
+                return error.response.data
             });
         return response;
     },

@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import Box from "@mui/material/Box";
 import Modal from "@mui/material/Modal";
-import { CircleStop, Clock, Menu, Pause, Play, Plus, X } from "lucide-react";
+import { CircleStop, Clock, Menu, Pause, Play, Plus, X, UserRoundPlus, UserRound } from "lucide-react";
 import { useIndexContext } from "../context/IndexContext";
 import DEVELOPMENT_CONFIG from "../helpers/config";
 import apiHelper from "../helpers/api-helper";
@@ -89,7 +89,7 @@ export default function Description() {
 
   async function screenShot() {
     let data = JSON.stringify({
-      card_id: childCardData?.id
+      c_id: childCardData?.id
     })
     let result = await apiHelper.postRequest("screen-shot", data)
     if (result?.code === DEVELOPMENT_CONFIG.statusCode) {
@@ -282,6 +282,24 @@ export default function Description() {
           {/* CONTENT */}
           <div className="flex gap-4">
             <div className="flex flex-col py-2 space-y-4 w-xl">
+
+              {/* Members */}
+              <div className="w-full">
+                <div className="mx-9 flex flex-col gap-1 w-full px-2">
+                  <p className="text-sm">Members</p>
+                  <div className="flex items-center gap-2">
+                    <div className="w-9 h-9 flex items-center justify-center bg-orange-500 text-white font-bold rounded-full cursor-pointer">
+                      u
+                    </div>
+                    <button className="w-9 h-9 flex items-center justify-center bg-gray-200 text-gray-700 text-xl rounded-full hover:bg-gray-300 transition cursor-pointer">
+                      <Plus size={18} />
+                    </button>
+                  </div>
+                  <div className="">Members</div>
+                </div>
+              </div>
+
+              {/* Description */}
               <div className="flex items-start gap-2 w-full">
                 <button className="p-1">
                   <Menu size={20} />
@@ -429,7 +447,23 @@ export default function Description() {
                 </div>
               </div>
             </div>
-            <div className=""></div>
+            <div className="space-y-2 relative">
+              <button
+                className="flex w-40 gap-2 bg-gray-200 text-sm rounded px-4 py-2 hover:bg-gray-300 cursor-pointer"
+                onClick={""}
+              >
+                <UserRoundPlus size={18} />
+                <span>Join</span>
+              </button>
+              <button
+                className="flex w-40 gap-2 bg-gray-200 text-sm rounded px-4 py-2 hover:bg-gray-300 cursor-pointer"
+                onClick={""}
+              >
+                <UserRound size={18} />
+                <span>Members</span>
+              </button>
+              <div className="absolute">Members</div>
+            </div>
           </div>
         </div>
       </Box>

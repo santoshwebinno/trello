@@ -35,7 +35,7 @@ export default function ChildCard({ id, cardValues, displayDashbordCard }) {
     e.preventDefault();
     const newStatus = !childCard?.is_checked;
     let data = JSON.stringify({
-      id,
+      c_id: id,
       is_checked: newStatus,
     });
     let result = await apiHelper.postRequest("update-child-card-status", data);
@@ -52,7 +52,7 @@ export default function ChildCard({ id, cardValues, displayDashbordCard }) {
     e.preventDefault();
     const newStatus = true;
     let data = JSON.stringify({
-      id,
+      c_id: id,
       newStatus,
     });
     let result = await apiHelper.postRequest("child-card-archive", data);

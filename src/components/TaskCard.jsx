@@ -56,7 +56,7 @@ export default function TaskCard({ id, values }) {
 
   // GET CHILD CARDS ( WHEN NEW CARD IS CREATED )
   async function displayDashbordCard(id) {
-    let result = await apiHelper.getRequest(`display-dashbord-card?id=${id}`);
+    let result = await apiHelper.getRequest(`display-dashbord-card?dashbord_c_id=${id}`);
     if (result?.code === DEVELOPMENT_CONFIG.statusCode) {
       setListCard(result?.body);
     } else {
@@ -112,7 +112,7 @@ export default function TaskCard({ id, values }) {
       return;
     }
     let data = JSON.stringify({
-      d_c_id: id,
+      dashbord_c_id: id,
       newListTitle: listCard.title,
     });
     let result = await apiHelper.postRequest("update-dashbord-card", data);
