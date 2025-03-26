@@ -24,6 +24,7 @@ import ChildCard from "../components/ChildCard";
 import io from "socket.io-client"
 import ScrollToBottom, { useScrollToBottom, useSticky } from "react-scroll-to-bottom";
 import { Badge } from "@mui/material";
+import { useNavigate } from "react-router-dom";
 
 const socket = io.connect("http://localhost:4321")
 
@@ -31,16 +32,13 @@ export default function Dashbord() {
     const [newListCard, setNewListCard] = useState(false);
     const [newListTitle, setNewListTitle] = useState("");
 
-    const { dashbordDataObj, handleOnDashbord, setBoardData, setDashbordDataObj } = useIndexContext();
+    const { dashbordDataObj, handleOnDashbord, setBoardData, boardUsers, getBoardUsers } = useIndexContext();
     const [activeCard, setActiveCard] = useState(null);
-
-    const [isMenuOpen, setIsMenuOpen] = useState(false);
 
     const [allNotification, setAllNotification] = useState([])
     const [isNotificationOpen, setIsNotificationOpen] = useState(false);
 
     const [isBoardUsers, setIsBoardUsers] = useState(false)
-    const [boardUsers, setBoardUsers] = useState({})
 
     const [isChatbox, setIsChatbox] = useState(false)
 
@@ -54,7 +52,6 @@ export default function Dashbord() {
 
     const listRef = useRef(null);
 
-    let isLogin = localStorage.getItem("token");
     let dashbordCID = parseInt(localStorage.getItem("dashbordCID"), 10);
     let loggedInUser = parseInt(localStorage.getItem("loggedInUser"), 10);
 
@@ -145,24 +142,6 @@ export default function Dashbord() {
         [dashbordDataObj]
     );
 
-    // LOGOUT 
-    const handleToggleMenu = () => {
-        if (isLogin) {
-            setIsMenuOpen(!isMenuOpen);
-        }
-    };
-
-    const handleLogOut = () => {
-        setIsMenuOpen(false)
-        localStorage.removeItem("token")
-        localStorage.removeItem("loggedInUser")
-        setBoardData([])
-        setDashbordDataObj({})
-        setIsBoardUsers(false)
-        setIsChatbox(false)
-        setIsNotificationOpen(false)
-    }
-
     // GET NOTIFICATION ( ONCLICK )
     async function getNotification() {
         let result = await apiHelper.getRequest("get-notification")
@@ -179,11 +158,10 @@ export default function Dashbord() {
     }
 
     const handleToggleNotifications = () => {
-        if (isLogin) {
-            setIsNotificationOpen(!isNotificationOpen);
-        }
+        setIsNotificationOpen(!isNotificationOpen);
     }
 
+    // RECEIVE NOTIFICATION SOCKET
     useEffect(() => {
         socket.on("receive_notification", (data) => {
             if (data.reciver_id == loggedInUser) {
@@ -247,33 +225,18 @@ export default function Dashbord() {
         if (!e.currentTarget.contains(e.relatedTarget)) {
             // setIsBoardUsers(false);
             // setIsNotificationOpen(false);
-            setIsMenuOpen(false);
-        }
-    }
-
-    // GET BOARD USERS ( ON dashbordCID)
-    async function getBoardUsers(id) {
-        let result = await apiHelper.getRequest(`get-board-users?board_id=${id}`)
-        if (result?.code === DEVELOPMENT_CONFIG.statusCode) {
-            setBoardUsers(result?.body)
-        } else {
-            setBoardUsers({})
         }
     }
 
     useEffect(() => {
-        if (!!isLogin) {
-            getNotification()
-            if (!!dashbordCID) {
-                getBoardUsers(dashbordCID)
-            }
+        getNotification()
+        if (!!dashbordCID) {
+            getBoardUsers(dashbordCID)
         }
     }, [dashbordCID])
 
     const handleToggleBoardUsers = async () => {
-        if (!!isLogin) {
-            setIsBoardUsers(!isBoardUsers)
-        }
+        setIsBoardUsers(!isBoardUsers)
     }
 
     // GET MESSAGES ( ON HANDLE JOIN CHAT )
@@ -580,21 +543,9 @@ export default function Dashbord() {
                         <button className="hover:bg-[#948ab7] rounded p-1 w-6 cursor-pointer">
                             <CalendarDays size={15} strokeWidth={2.5} />
                         </button>
-                        <button className="hover:bg-[#948ab7] rounded p-1 w-6 cursor-pointer"
-                            onClick={handleToggleMenu}
-                        >
+                        <button className="hover:bg-[#948ab7] rounded p-1 w-6 cursor-pointer">
                             <Ellipsis size={15} strokeWidth={2.5} />
                         </button>
-                        {isMenuOpen && (
-                            <div className="absolute top-8 right-0 bg-white border rounded shadow-md p-2">
-                                <button
-                                    className="text-gray-500 bg-gray-200 text-base px-3 py-1 rounded hover:bg-gray-300 cursor-pointer"
-                                    onClick={handleLogOut}
-                                >
-                                    Logout
-                                </button>
-                            </div>
-                        )}
                     </div>
                 </div>
                 {/* CONTENT */}

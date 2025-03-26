@@ -9,6 +9,10 @@ export default function ContextProvider({ children }) {
 
     const [boardData, setBoardData] = useState([]);
 
+    const [boardUsers, setBoardUsers] = useState([])
+
+    const [joinedUsers, setJoinedUsers] = useState([])
+
     const [openDescription, setOpenDescription] = useState(false)
     const [childCardDetails, setChildCardDetails] = useState({})
 
@@ -43,16 +47,61 @@ export default function ContextProvider({ children }) {
         }
     }
 
-    // OPEN DESCRIPTION MODAL AND GET CHILD CARD DATA
-    const handleOpenDescriptionModal = (async (id) => {
-        let result = await apiHelper.getRequest(`get-child-card?c_id=${id}`)
+    // GET BOARD USERS
+    async function getBoardUsers(id) {
+        let result = await apiHelper.getRequest(`get-board-users?board_id=${id}`)
         if (result?.code === DEVELOPMENT_CONFIG.statusCode) {
-            setOpenDescription(true)
+            setBoardUsers(result?.body)
+        } else {
+            setBoardUsers([])
+        }
+    }
+
+    // JOIN AND LEAVE SINGLE USER
+    const handleJoinLeaveUser = async (e, c_id) => {
+        e.preventDefault();
+        let data = JSON.stringify({
+            c_id
+        })
+        let result = await apiHelper.postRequest("join-user-on-card", data)
+        if (result?.code === DEVELOPMENT_CONFIG.statusCode) {
+            // setJoinedUsers([])
+        }
+    }
+
+    // GET CARD JOINED USERS
+    async function getCardJoinedUsers(c_id) {
+        let result = await apiHelper.getRequest(`get-card-joined-user?c_id=${c_id}`)
+        if (result?.code === DEVELOPMENT_CONFIG.statusCode) {
+            setJoinedUsers(result?.body)
+        } else {
+            setJoinedUsers([])
+        }
+    }
+
+    async function getChildCardDetails(c_id) {
+        let result = await apiHelper.getRequest(`get-child-card?c_id=${c_id}`)
+        if (result?.code === DEVELOPMENT_CONFIG.statusCode) {
             setChildCardDetails(result?.body)
         } else {
-            setOpenDescription(false)
             setChildCardDetails({})
         }
+    }
+
+
+    // OPEN DESCRIPTION MODAL AND GET CHILD CARD DATA
+    const handleOpenDescriptionModal = (async (id) => {
+        await getChildCardDetails(id)
+        await getCardJoinedUsers(id)
+        setOpenDescription(true)
+        // let result = await apiHelper.getRequest(`get-child-card?c_id=${id}`)
+        // if (result?.code === DEVELOPMENT_CONFIG.statusCode) {
+        //     setOpenDescription(true)
+        //     setChildCardDetails(result?.body)
+        // } else {
+        //     setOpenDescription(false)
+        //     setChildCardDetails({})
+        // }
     })
 
     // CHECKED OR UNCHECKED CHILD CARD
@@ -107,17 +156,13 @@ export default function ContextProvider({ children }) {
     return (
         <IndexContext.Provider
             value={{
-                dashbordDataObj,
-                setDashbordDataObj,
-                handleOnDashbord,
-                openDescription,
-                setOpenDescription,
-                handleOpenDescriptionModal,
-                childCardDetails,
-                setChildCardDetails,
-                boardData,
-                setBoardData,
-                getBoards,
+                dashbordDataObj, setDashbordDataObj, handleOnDashbord,
+                boardData, setBoardData, getBoards,
+                boardUsers, setBoardUsers, getBoardUsers,
+                joinedUsers, setJoinedUsers, handleJoinLeaveUser,
+                getCardJoinedUsers,
+                openDescription, setOpenDescription, handleOpenDescriptionModal,
+                childCardDetails, setChildCardDetails,
                 handleComplete,
                 handleUpdateChildCardTitle,
             }}

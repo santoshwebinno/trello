@@ -5,6 +5,7 @@ import { CircleStop, Clock, Menu, Pause, Play, Plus, X, UserRoundPlus, UserRound
 import { useIndexContext } from "../context/IndexContext";
 import DEVELOPMENT_CONFIG from "../helpers/config";
 import apiHelper from "../helpers/api-helper";
+import Member from "./Member";
 
 const style = {
   position: "absolute",
@@ -23,7 +24,8 @@ export default function Description() {
     childCardDetails,
     handleComplete,
     handleUpdateChildCardTitle,
-    getBoards
+    getBoards,
+    handleJoinLeaveUser
   } = useIndexContext();
 
   // CLOSE DESCRIPTION MODAL
@@ -233,6 +235,17 @@ export default function Description() {
     return fName
   }
 
+  const [isOpenJoinMember, setIsOpenJoinMember] = useState(false)
+  const openMemberBoard = () => {
+    setIsOpenJoinMember(!isOpenJoinMember)
+  }
+
+  const handleCloseAll = (e) => {
+    if (!e.currentTarget.contains(e.relatedTarget)) {
+      setIsOpenJoinMember(false);
+    }
+  }
+
   return (
     <Modal
       open={openDescription}
@@ -279,7 +292,7 @@ export default function Description() {
             </button>
           </div>
 
-          {/* CONTENT */}
+          {/* CONTENT LEFT */}
           <div className="flex gap-4">
             <div className="flex flex-col py-2 space-y-4 w-xl">
 
@@ -287,15 +300,24 @@ export default function Description() {
               <div className="w-full">
                 <div className="mx-9 flex flex-col gap-1 w-full px-2">
                   <p className="text-sm">Members</p>
-                  <div className="flex items-center gap-2">
-                    <div className="w-9 h-9 flex items-center justify-center bg-orange-500 text-white font-bold rounded-full cursor-pointer">
-                      u
-                    </div>
-                    <button className="w-9 h-9 flex items-center justify-center bg-gray-200 text-gray-700 text-xl rounded-full hover:bg-gray-300 transition cursor-pointer">
+                  <div className="flex items-center gap-2 relative">
+                    <ul className="flex gap-2">
+                      <li className="w-9 h-9 flex items-center justify-center bg-yellow-500 font-bold rounded-full cursor-pointer">
+                        u
+                      </li>
+                    </ul >
+                    <button
+                      className="w-9 h-9 flex items-center justify-center bg-gray-200 text-gray-700 text-xl rounded-full hover:bg-gray-300 transition cursor-pointer"
+                      onClick={openMemberBoard}
+                    >
                       <Plus size={18} />
                     </button>
                   </div>
-                  <div className="">Members</div>
+                  {!!isOpenJoinMember &&
+                    <div className="absolute left-20 mt-10">
+                      <Member setIsOpenJoinMember={setIsOpenJoinMember} />
+                    </div>
+                  }
                 </div>
               </div>
 
@@ -447,22 +469,26 @@ export default function Description() {
                 </div>
               </div>
             </div>
-            <div className="space-y-2 relative">
+
+            {/* CONTENT RIGHT */}
+            <div className="space-y-2">
               <button
                 className="flex w-40 gap-2 bg-gray-200 text-sm rounded px-4 py-2 hover:bg-gray-300 cursor-pointer"
-                onClick={""}
+                onClick={(e) => handleJoinLeaveUser(e, childCardData?.id)}
               >
                 <UserRoundPlus size={18} />
                 <span>Join</span>
               </button>
               <button
                 className="flex w-40 gap-2 bg-gray-200 text-sm rounded px-4 py-2 hover:bg-gray-300 cursor-pointer"
-                onClick={""}
+              // onClick={""}
               >
                 <UserRound size={18} />
                 <span>Members</span>
               </button>
-              <div className="absolute">Members</div>
+              <div className="">
+                {/* <Member /> */}
+              </div>
             </div>
           </div>
         </div>

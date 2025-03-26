@@ -14,24 +14,16 @@ import {
 } from "lucide-react";
 import CreateBoard from "./CreateBoard";
 import CloseBoard from "./CloseBoard";
-// import apiHelper from "../helpers/api-helper";
-// import DEVELOPMENT_CONFIG from "../helpers/config";
 import { useIndexContext } from "../context/IndexContext";
 import InviteMembers from "./InviteMembers";
-import LogIn from "./LogIn";
+import { useNavigate } from "react-router-dom";
 
 export default function SideBar() {
   const { handleOnDashbord, boardData, getBoards } = useIndexContext();
 
-  let isLogin = localStorage.getItem("token");
   let dashbordCID = parseInt(localStorage.getItem("dashbordCID"), 10);
   let sideBarStatus = JSON.parse(localStorage.getItem("sideBarStatus")) ?? true;
-
-  if (!isLogin) {
-    localStorage.removeItem("dashbordCID");
-    localStorage.removeItem("sideBarStatus");
-    localStorage.removeItem("loggedInUser");
-  }
+  const navigate = useNavigate();
 
   const [isSidebarOpen, setIsSidebarOpen] = useState(sideBarStatus);
   const handleOpenSideBarModal = async (e) => {
@@ -41,12 +33,21 @@ export default function SideBar() {
     setIsSidebarOpen(newStatus);
   };
 
+  const handleLogOut = () => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("loggedInUser");
+    localStorage.removeItem("dashbordCID");
+    navigate("/");
+  };
+
+  useEffect(() => {
+    getBoards();
+  }, []);
+
   // OPEN CREATE BOARD
   const [openCreateBoard, setOpenCreateBoard] = useState(false);
   const handleOpenCreateBoard = () => {
-    if (!!isLogin) {
-      setOpenCreateBoard(true);
-    }
+    setOpenCreateBoard(true);
   };
 
   const [yourBoard, setYourBoard] = useState(false);
@@ -60,38 +61,22 @@ export default function SideBar() {
 
   // OPEN YOUR BOARD ( FOR SORTING )
   const handleOpenYourBoard = () => {
-    if (!!isLogin) {
-      setYourBoard(true);
-      setRemoveBoard(false);
-    }
+    setYourBoard(true);
+    setRemoveBoard(false);
   };
+
   // OPEN BOARD ( LIST OF BOARDS )
   const handleOpenBoard = (e, id, title) => {
     e.stopPropagation();
-    if (!!isLogin) {
-      setBoardTitle({ id, title });
-      setOpenBoard(true);
-      setRemoveBoard(true);
-    }
+    setBoardTitle({ id, title });
+    setOpenBoard(true);
+    setRemoveBoard(true);
   };
-
-  useEffect(() => {
-    if (!!isLogin) {
-      getBoards();
-    }
-  }, []);
 
   const [openInvite, setOpenInvite] = useState(false);
   const handleOpenInvite = () => {
-    if (!!isLogin && !!dashbordCID) {
+    if (!!dashbordCID) {
       setOpenInvite(true);
-    }
-  };
-
-  const [openLogin, setOpenLogin] = useState(false);
-  const handleOpenLogin = () => {
-    if (!isLogin) {
-      setOpenLogin(true);
     }
   };
 
@@ -263,24 +248,21 @@ export default function SideBar() {
                 <>
                   <div>
                     <p>You do not have any boards</p>
-                    {!isLogin && (
-                      <button
-                        className="w-full bg-gray-400 py-1 rounded mt-2 hover:bg-gray-500"
-                        onClick={handleOpenLogin}
-                      >
-                        Log In
-                      </button>
-                    )}
                   </div>
                 </>
               )}
+              <button
+                className="w-full bg-gray-400 py-1 rounded mt-2 hover:bg-gray-500"
+                onClick={handleLogOut}
+              >
+                Log Out
+              </button>
             </div>
           </div>
         )}
       </div>
 
       <CreateBoard open={openCreateBoard} setOpen={setOpenCreateBoard} />
-      <LogIn openLogin={openLogin} setOpenLogin={setOpenLogin} />
       <InviteMembers openInvite={openInvite} setOpenInvite={setOpenInvite} />
 
       <CloseBoard
