@@ -11,7 +11,7 @@ export default function ContextProvider({ children }) {
 
     const [boardUsers, setBoardUsers] = useState([])
 
-    const [joinedUsers, setJoinedUsers] = useState([])
+    const [allJoinedUsers, setAllJoinedUsers] = useState([])
 
     const [openDescription, setOpenDescription] = useState(false)
     const [childCardDetails, setChildCardDetails] = useState({})
@@ -57,25 +57,13 @@ export default function ContextProvider({ children }) {
         }
     }
 
-    // JOIN AND LEAVE SINGLE USER
-    const handleJoinLeaveUser = async (e, c_id) => {
-        e.preventDefault();
-        let data = JSON.stringify({
-            c_id
-        })
-        let result = await apiHelper.postRequest("join-user-on-card", data)
+    // GET ALL USERS JOINED CARD
+    async function getAllUsersJoinedCard(c_id) {
+        let result = await apiHelper.getRequest(`get-all-users-joined-card?c_id=${c_id}`)
         if (result?.code === DEVELOPMENT_CONFIG.statusCode) {
-            // setJoinedUsers([])
-        }
-    }
-
-    // GET CARD JOINED USERS
-    async function getCardJoinedUsers(c_id) {
-        let result = await apiHelper.getRequest(`get-card-joined-user?c_id=${c_id}`)
-        if (result?.code === DEVELOPMENT_CONFIG.statusCode) {
-            setJoinedUsers(result?.body)
+            setAllJoinedUsers(result?.body)
         } else {
-            setJoinedUsers([])
+            setAllJoinedUsers([])
         }
     }
 
@@ -88,20 +76,10 @@ export default function ContextProvider({ children }) {
         }
     }
 
-
     // OPEN DESCRIPTION MODAL AND GET CHILD CARD DATA
     const handleOpenDescriptionModal = (async (id) => {
         await getChildCardDetails(id)
-        await getCardJoinedUsers(id)
         setOpenDescription(true)
-        // let result = await apiHelper.getRequest(`get-child-card?c_id=${id}`)
-        // if (result?.code === DEVELOPMENT_CONFIG.statusCode) {
-        //     setOpenDescription(true)
-        //     setChildCardDetails(result?.body)
-        // } else {
-        //     setOpenDescription(false)
-        //     setChildCardDetails({})
-        // }
     })
 
     // CHECKED OR UNCHECKED CHILD CARD
@@ -159,8 +137,7 @@ export default function ContextProvider({ children }) {
                 dashbordDataObj, setDashbordDataObj, handleOnDashbord,
                 boardData, setBoardData, getBoards,
                 boardUsers, setBoardUsers, getBoardUsers,
-                joinedUsers, setJoinedUsers, handleJoinLeaveUser,
-                getCardJoinedUsers,
+                allJoinedUsers, setAllJoinedUsers, getAllUsersJoinedCard,
                 openDescription, setOpenDescription, handleOpenDescriptionModal,
                 childCardDetails, setChildCardDetails,
                 handleComplete,

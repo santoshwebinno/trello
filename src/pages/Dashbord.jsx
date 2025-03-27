@@ -24,7 +24,6 @@ import ChildCard from "../components/ChildCard";
 import io from "socket.io-client"
 import ScrollToBottom, { useScrollToBottom, useSticky } from "react-scroll-to-bottom";
 import { Badge } from "@mui/material";
-import { useNavigate } from "react-router-dom";
 
 const socket = io.connect("http://localhost:4321")
 

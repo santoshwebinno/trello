@@ -1,7 +1,7 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import Box from "@mui/material/Box";
 import Modal from "@mui/material/Modal";
-import { CircleStop, Clock, Menu, Pause, Play, Plus, X, UserRoundPlus, UserRound } from "lucide-react";
+import { CircleStop, Clock, Menu, Pause, Play, Plus, X, UserRoundPlus, UserRound, UserRoundMinus } from "lucide-react";
 import { useIndexContext } from "../context/IndexContext";
 import DEVELOPMENT_CONFIG from "../helpers/config";
 import apiHelper from "../helpers/api-helper";
@@ -25,7 +25,9 @@ export default function Description() {
     handleComplete,
     handleUpdateChildCardTitle,
     getBoards,
-    handleJoinLeaveUser
+    allJoinedUsers,
+    setAllJoinedUsers,
+    getAllUsersJoinedCard,
   } = useIndexContext();
 
   // CLOSE DESCRIPTION MODAL
@@ -236,13 +238,57 @@ export default function Description() {
   }
 
   const [isOpenJoinMember, setIsOpenJoinMember] = useState(false)
+  const [joinedUser, setJoinedUser] = useState({})
+
   const openMemberBoard = () => {
     setIsOpenJoinMember(!isOpenJoinMember)
   }
 
+  const popupRef = useRef(null);
+  const buttonRef = useRef(null);
+
   const handleCloseAll = (e) => {
-    if (!e.currentTarget.contains(e.relatedTarget)) {
+    if (
+      popupRef.current &&
+      !popupRef.current.contains(e.target) &&
+      !buttonRef.current.contains(e.target)
+    ) {
       setIsOpenJoinMember(false);
+    }
+  };
+
+  // GET USER JOINED CARD
+  async function getCardJoinedUser(c_id) {
+    let result = await apiHelper.getRequest(`get-card-joined-user?c_id=${c_id}`)
+    if (result?.code === DEVELOPMENT_CONFIG.statusCode) {
+      setJoinedUser(result?.body)
+    } else {
+      setJoinedUser({})
+    }
+  }
+
+  useEffect(() => {
+    getCardJoinedUser(childCardData?.id)
+    getAllUsersJoinedCard(childCardData?.id)
+  }, [childCardData])
+
+  // JOIN AND LEAVE SINGLE USER
+  const handleJoinLeaveUser = async (e, c_id, is_join) => {
+    e.preventDefault();
+    let data = JSON.stringify({
+      c_id,
+      is_join
+    })
+    let result = await apiHelper.postRequest("user-join-card", data)
+    if (result?.code === DEVELOPMENT_CONFIG.statusCode) {
+      setJoinedUser(result?.body)
+      setAllJoinedUsers(prevUsers =>
+        prevUsers.map(user =>
+          user.id === result?.body.id ? { ...user, is_join: result?.body.is_join } : user
+        )
+      );
+    } else {
+      setJoinedUser({})
     }
   }
 
@@ -254,7 +300,10 @@ export default function Description() {
       aria-describedby="modal-modal-description"
     >
       <Box sx={{ ...style }} className="rounded-xl">
-        <div className="space-y-6 text-gray-700 max-h-[90vh] overflow-y-auto" >
+        <div
+          className="space-y-6 text-gray-700 max-h-[90vh] overflow-y-auto"
+          onMouseDown={handleCloseAll}
+        >
           {/* HEADER TITLE */}
           <div className="flex w-full gap-5 items-start justify-between">
             <div className="flex flex-row w-full gap-2 items-center justify-between">
@@ -297,29 +346,41 @@ export default function Description() {
             <div className="flex flex-col py-2 space-y-4 w-xl">
 
               {/* Members */}
-              <div className="w-full">
-                <div className="mx-9 flex flex-col gap-1 w-full px-2">
-                  <p className="text-sm">Members</p>
-                  <div className="flex items-center gap-2 relative">
-                    <ul className="flex gap-2">
-                      <li className="w-9 h-9 flex items-center justify-center bg-yellow-500 font-bold rounded-full cursor-pointer">
-                        u
-                      </li>
-                    </ul >
-                    <button
-                      className="w-9 h-9 flex items-center justify-center bg-gray-200 text-gray-700 text-xl rounded-full hover:bg-gray-300 transition cursor-pointer"
-                      onClick={openMemberBoard}
-                    >
-                      <Plus size={18} />
-                    </button>
-                  </div>
-                  {!!isOpenJoinMember &&
-                    <div className="absolute left-20 mt-10">
-                      <Member setIsOpenJoinMember={setIsOpenJoinMember} />
+              {!!allJoinedUsers && allJoinedUsers?.length > 0 && (
+                <div className="w-full">
+                  <div className="mx-9 flex flex-col gap-1 w-full px-2">
+                    <p className="text-sm">Members</p>
+                    <div className="flex items-center gap-2 relative">
+                      <ul className="flex">
+                        {allJoinedUsers?.map((value) => (
+                          <li key={value.id}>
+                            {!!value.is_join && (
+                              <div className="w-9 h-9 flex items-center justify-center bg-yellow-500 font-bold rounded-full cursor-pointer">
+                                {extractFirst(value.user_name)}
+                              </div>
+                            )}
+                          </li>
+                        ))}
+                      </ul >
+                      <button
+                        ref={buttonRef}
+                        className="w-9 h-9 flex items-center justify-center bg-gray-200 text-gray-700 text-xl rounded-full hover:bg-gray-300 transition cursor-pointer"
+                        onClick={openMemberBoard}
+                        onPointerDown={(e) => e.stopPropagation()}
+                      >
+                        <Plus size={18} />
+                      </button>
                     </div>
-                  }
+                    {!!isOpenJoinMember &&
+                      <div ref={popupRef}
+                        className="absolute left-12 mt-16 text-gray-700 bg-white rounded-lg shadow-xl w-80 p-3 border border-gray-200"
+                      >
+                        <Member setIsOpenJoinMember={setIsOpenJoinMember} />
+                      </div>
+                    }
+                  </div>
                 </div>
-              </div>
+              )}
 
               {/* Description */}
               <div className="flex items-start gap-2 w-full">
@@ -472,13 +533,23 @@ export default function Description() {
 
             {/* CONTENT RIGHT */}
             <div className="space-y-2">
-              <button
-                className="flex w-40 gap-2 bg-gray-200 text-sm rounded px-4 py-2 hover:bg-gray-300 cursor-pointer"
-                onClick={(e) => handleJoinLeaveUser(e, childCardData?.id)}
-              >
-                <UserRoundPlus size={18} />
-                <span>Join</span>
-              </button>
+              {!!joinedUser && joinedUser?.is_join ? (
+                <button
+                  className="flex w-40 gap-2 bg-gray-200 text-sm rounded px-4 py-2 hover:bg-gray-300 cursor-pointer"
+                  onClick={(e) => handleJoinLeaveUser(e, childCardData?.id, false)}
+                >
+                  <UserRoundMinus size={18} />
+                  <span>Leave</span>
+                </button>
+              ) : (
+                <button
+                  className="flex w-40 gap-2 bg-gray-200 text-sm rounded px-4 py-2 hover:bg-gray-300 cursor-pointer"
+                  onClick={(e) => handleJoinLeaveUser(e, childCardData?.id, true)}
+                >
+                  <UserRoundPlus size={18} />
+                  <span>Join</span>
+                </button>
+              )}
               <button
                 className="flex w-40 gap-2 bg-gray-200 text-sm rounded px-4 py-2 hover:bg-gray-300 cursor-pointer"
               // onClick={""}
@@ -493,6 +564,6 @@ export default function Description() {
           </div>
         </div>
       </Box>
-    </Modal>
+    </Modal >
   );
 }
