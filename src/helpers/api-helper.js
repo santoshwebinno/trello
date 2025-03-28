@@ -6,7 +6,7 @@ export default {
         let token = localStorage.getItem("token")
         let config = {
             method: "post",
-            url: DEVELOPMENT_CONFIG.base_url + url,
+            url: DEVELOPMENT_CONFIG.base_url + "/api/v1/" + url,
             headers: {
                 "Content-Type": "application/json",
                 'Authorization': `Bearer ${token}`
@@ -38,7 +38,7 @@ export default {
         let token = localStorage.getItem("token")
         var config = {
             method: "get",
-            url: DEVELOPMENT_CONFIG.base_url + url,
+            url: DEVELOPMENT_CONFIG.base_url + "/api/v1/" + url,
             headers: {
                 "Content-Type": "application/json",
                 'Authorization': `Bearer ${token}`

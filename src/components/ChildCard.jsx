@@ -6,7 +6,7 @@ import { useDraggable } from "@dnd-kit/core";
 import { useIndexContext } from "../context/IndexContext";
 
 export default function ChildCard({ id, cardValues, displayDashbordCard }) {
-  const { handleOpenDescriptionModal } = useIndexContext();
+  const { handleOpenDescriptionModal, allJoinedUsers } = useIndexContext();
 
   const { attributes, listeners, setNodeRef, transform } = useDraggable({
     id,
@@ -61,6 +61,11 @@ export default function ChildCard({ id, cardValues, displayDashbordCard }) {
       displayDashbordCard(result?.body?.dashbord_c_id);
     }
   };
+
+  let extractFirst = (name) => {
+    const fName = name?.charAt(0);
+    return fName
+  }
 
   // NOT IN USE >>>>>>>>>>>>>>>>>>>>
   const textareaRef = useRef(null);
@@ -153,13 +158,26 @@ export default function ChildCard({ id, cardValues, displayDashbordCard }) {
           </button>
         </div>
       </div>
-      <button
-        className="mx-3 p-0.5 cursor-pointer"
-        onPointerDown={(e) => e.stopPropagation()}
-        onClick={() => handleOpenDescriptionModal(id)}
-      >
-        <Menu size={15} />
-      </button>
+      <div className="w-full px-2 flex items-center justify-between">
+        <button
+          className="p-0.5 cursor-pointer"
+          onPointerDown={(e) => e.stopPropagation()}
+          onClick={() => handleOpenDescriptionModal(id)}
+        >
+          <Menu size={15} />
+        </button>
+        <ul className="flex">
+          {!!childCard && childCard?.joined_card_users?.length > 0 && childCard?.joined_card_users?.map((value) => (
+            <li key={value.id}>
+              {!!value.is_join && (
+                <div className="w-5 h-5 flex items-center justify-center bg-yellow-500 text-sm font-bold rounded-full">
+                  {extractFirst(value.user_name)}
+                </div>
+              )}
+            </li>
+          ))}
+        </ul>
+      </div>
     </div>
   );
 }

@@ -17,10 +17,13 @@ import CloseBoard from "./CloseBoard";
 import { useIndexContext } from "../context/IndexContext";
 import InviteMembers from "./InviteMembers";
 import { useNavigate } from "react-router-dom";
+import apiHelper from "../helpers/api-helper";
+import DEVELOPMENT_CONFIG from "../helpers/config";
 
 export default function SideBar() {
   const { handleOnDashbord, boardData, getBoards } = useIndexContext();
 
+  let loggedInUser = parseInt(localStorage.getItem("loggedInUser"), 10);
   let dashbordCID = parseInt(localStorage.getItem("dashbordCID"), 10);
   let sideBarStatus = JSON.parse(localStorage.getItem("sideBarStatus")) ?? true;
   const navigate = useNavigate();
@@ -33,11 +36,18 @@ export default function SideBar() {
     setIsSidebarOpen(newStatus);
   };
 
-  const handleLogOut = () => {
-    localStorage.removeItem("token");
-    localStorage.removeItem("loggedInUser");
-    localStorage.removeItem("dashbordCID");
-    navigate("/");
+  const handleLogOut = async (e) => {
+    e.preventDefault()
+    let data = JSON.stringify({
+      user_id: loggedInUser
+    })
+    let result = await apiHelper.postRequest("log-out", data)
+    if (result?.code === DEVELOPMENT_CONFIG.statusCode) {
+      localStorage.removeItem("token");
+      localStorage.removeItem("loggedInUser");
+      localStorage.removeItem("dashbordCID");
+      navigate("/");
+    }
   };
 
   useEffect(() => {
@@ -180,7 +190,7 @@ export default function SideBar() {
                       <CalendarDays size={18} />
                       <span className="text-sm italic">Calendar</span>
                     </span>
-                    <button className="opacity-0 group-hover:opacity-100 transition-opacity duration-200hover:bg-[#948ab7] rounded p-1 w-7">
+                    <button className="opacity-0 group-hover:opacity-100 transition-opacity duration-200 hover:bg-[#948ab7] rounded p-1 w-7">
                       <Ellipsis size={18} strokeWidth={2.5} />
                     </button>
                   </li>
@@ -253,7 +263,7 @@ export default function SideBar() {
               )}
               <button
                 className="w-full bg-gray-400 py-1 rounded mt-2 hover:bg-gray-500"
-                onClick={handleLogOut}
+                onClick={(e) => handleLogOut(e)}
               >
                 Log Out
               </button>

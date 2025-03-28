@@ -3,9 +3,10 @@ import { X } from "lucide-react";
 import { useIndexContext } from "../context/IndexContext";
 import apiHelper from "../helpers/api-helper";
 import DEVELOPMENT_CONFIG from "../helpers/config";
+import { toast } from "react-toastify";
 
-const Member = ({ setIsOpenJoinMember }) => {
-    const { boardUsers, allJoinedUsers } = useIndexContext();
+const Member = ({ setIsOpenJoinMember, setJoinedUser }) => {
+    const { boardUsers, allJoinedUsers, setAllJoinedUsers } = useIndexContext();
 
     let dashbordCID = parseInt(localStorage.getItem("dashbordCID"), 10);
 
@@ -23,8 +24,13 @@ const Member = ({ setIsOpenJoinMember }) => {
     const boardUsersFiltered = boardUsers.filter(boardUser =>
         !joinedUsers.some(joinedUser => joinedUser.user_id === boardUser.id)
     );
-    // console.log("allJoinedUsers", joinedUsers)
-    // console.log("boardUsers", boardUsersFiltered)
+
+    const error = (msg) => {
+        toast.success(msg,
+            {
+                autoClose: 5000,
+            });
+    }
 
     // ADD OR REMOVE USER FROM CARD BY BOARD ADMIN ONLY
     const handleAddRemoveUser = async (e, user_id, user_name, is_join) => {
@@ -37,14 +43,16 @@ const Member = ({ setIsOpenJoinMember }) => {
         })
         let result = await apiHelper.postRequest(`add-remove-user?board_id=${dashbordCID}`, data)
         if (result?.code === DEVELOPMENT_CONFIG.statusCode) {
-            // setJoinedUser(result?.body)
-            // setAllJoinedUsers(prevUsers =>
-            //     prevUsers.map(user =>
-            //         user.id === result?.body.id ? { ...user, is_join: result?.body.is_join } : user
-            //     )
-            // );
+            setAllJoinedUsers(prevUsers =>
+                prevUsers.map(user =>
+                    user.id === result?.body.id ? { ...user, is_join: result?.body.is_join } : user
+                )
+            );
+            setJoinedUser((prev) =>
+                prev.user_id === result?.body.user_id ? result?.body : prev
+            )
         } else {
-            // setJoinedUser({})
+            error(result?.message)
         }
     }
 

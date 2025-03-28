@@ -25,7 +25,7 @@ import io from "socket.io-client"
 import ScrollToBottom, { useScrollToBottom, useSticky } from "react-scroll-to-bottom";
 import { Badge } from "@mui/material";
 
-const socket = io.connect("http://localhost:4321")
+const socket = io.connect(DEVELOPMENT_CONFIG.base_url)
 
 export default function Dashbord() {
     const [newListCard, setNewListCard] = useState(false);
@@ -141,7 +141,7 @@ export default function Dashbord() {
         [dashbordDataObj]
     );
 
-    // GET NOTIFICATION ( ONCLICK )
+    // GET NOTIFICATION
     async function getNotification() {
         let result = await apiHelper.getRequest("get-notification")
         if (result?.code === DEVELOPMENT_CONFIG.statusCode) {

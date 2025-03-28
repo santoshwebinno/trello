@@ -246,14 +246,21 @@ export default function Description() {
 
   const popupRef = useRef(null);
   const buttonRef = useRef(null);
+  const buttonRef2 = useRef(null);
+
+  const [isOpenJoinMember2, setIsOpenJoinMember2] = useState(false);
+  const openMemberBoard2 = () => setIsOpenJoinMember2(!isOpenJoinMember2);
 
   const handleCloseAll = (e) => {
     if (
-      popupRef.current &&
-      !popupRef.current.contains(e.target) &&
-      !buttonRef.current.contains(e.target)
+      popupRef.current && !popupRef.current.contains(e.target)
     ) {
-      setIsOpenJoinMember(false);
+      if (buttonRef.current && !buttonRef.current.contains(e.target)) {
+        setIsOpenJoinMember(false);
+      }
+      if (buttonRef2.current && !buttonRef2.current.contains(e.target)) {
+        setIsOpenJoinMember2(false);
+      }
     }
   };
 
@@ -375,7 +382,7 @@ export default function Description() {
                       <div ref={popupRef}
                         className="absolute left-12 mt-16 text-gray-700 bg-white rounded-lg shadow-xl w-80 p-3 border border-gray-200"
                       >
-                        <Member setIsOpenJoinMember={setIsOpenJoinMember} />
+                        <Member setIsOpenJoinMember={setIsOpenJoinMember} setJoinedUser={setJoinedUser} />
                       </div>
                     }
                   </div>
@@ -551,15 +558,21 @@ export default function Description() {
                 </button>
               )}
               <button
-                className="flex w-40 gap-2 bg-gray-200 text-sm rounded px-4 py-2 hover:bg-gray-300 cursor-pointer"
-              // onClick={""}
+                ref={buttonRef2}
+                className="flex w-40 gap-2 bg-gray-200 text-sm rounded px-4 py-2 hover:bg-gray-300 cursor-pointer relative"
+                onClick={openMemberBoard2}
               >
                 <UserRound size={18} />
                 <span>Members</span>
               </button>
-              <div className="">
-                {/* <Member /> */}
-              </div>
+              {!!isOpenJoinMember2 &&
+                <div
+                  ref={popupRef}
+                  className="absolute text-gray-700 bg-white rounded-lg shadow-xl w-80 p-3 border border-gray-200"
+                >
+                  <Member setIsOpenJoinMember={setIsOpenJoinMember2} setJoinedUser={setJoinedUser} />
+                </div>
+              }
             </div>
           </div>
         </div>

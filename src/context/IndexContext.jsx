@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState } from 'react'
+import React, { createContext, useContext, useEffect, useState } from 'react'
 import DEVELOPMENT_CONFIG from '../helpers/config';
 import apiHelper from '../helpers/api-helper';
 
@@ -67,6 +67,7 @@ export default function ContextProvider({ children }) {
         }
     }
 
+    // GET CARD DETAILS
     async function getChildCardDetails(c_id) {
         let result = await apiHelper.getRequest(`get-child-card?c_id=${c_id}`)
         if (result?.code === DEVELOPMENT_CONFIG.statusCode) {
@@ -76,7 +77,7 @@ export default function ContextProvider({ children }) {
         }
     }
 
-    // OPEN DESCRIPTION MODAL AND GET CHILD CARD DATA
+    // OPEN DESCRIPTION MODAL
     const handleOpenDescriptionModal = (async (id) => {
         await getChildCardDetails(id)
         setOpenDescription(true)
@@ -131,6 +132,22 @@ export default function ContextProvider({ children }) {
         } else { }
     };
 
+    // LOGIN & LOGOUT TIME FUNCNALITY
+    const [isStartTime, setIsStartTime] = useState(false);
+    const [totalTime, setTotalTime] = useState(0);
+
+    useEffect(() => {
+        let interval
+        if (!!isStartTime) {
+            interval = setInterval(() => {
+                setTotalTime((prev) => prev + 1)
+            }, 1000)
+        } else {
+            clearInterval(interval)
+        }
+        return () => clearInterval(interval)
+    }, [isStartTime])
+
     return (
         <IndexContext.Provider
             value={{
@@ -142,6 +159,7 @@ export default function ContextProvider({ children }) {
                 childCardDetails, setChildCardDetails,
                 handleComplete,
                 handleUpdateChildCardTitle,
+                setIsStartTime, totalTime
             }}
         >
             {children}
