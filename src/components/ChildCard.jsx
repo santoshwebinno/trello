@@ -1,12 +1,12 @@
 import { Archive, FilePenLine, Menu } from "lucide-react";
-import React, { useEffect, useState, useRef, useCallback } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import apiHelper from "../helpers/api-helper";
 import DEVELOPMENT_CONFIG from "../helpers/config";
 import { useDraggable } from "@dnd-kit/core";
 import { useIndexContext } from "../context/IndexContext";
 
 export default function ChildCard({ id, cardValues, displayDashbordCard }) {
-  const { handleOpenDescriptionModal, allJoinedUsers } = useIndexContext();
+  const { handleOpenDescriptionModal } = useIndexContext();
 
   const { attributes, listeners, setNodeRef, transform } = useDraggable({
     id,

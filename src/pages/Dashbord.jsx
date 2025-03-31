@@ -227,13 +227,6 @@ export default function Dashbord() {
         }
     }
 
-    useEffect(() => {
-        getNotification()
-        if (!!dashbordCID) {
-            getBoardUsers(dashbordCID)
-        }
-    }, [dashbordCID])
-
     const handleToggleBoardUsers = async () => {
         setIsBoardUsers(!isBoardUsers)
     }
@@ -327,6 +320,94 @@ export default function Dashbord() {
         };
     }, [chatRoomId]);
 
+    const [isUserLogDetail, setIsUserLogDetail] = useState(false);
+    const [userLogDetail, setUserLogDetail] = useState([]);
+
+    const handleToggleUserDetail = () => {
+        setIsUserLogDetail(!isUserLogDetail);
+    }
+
+    const getUserDetail = async () => {
+        let result = await apiHelper.getRequest(`get-user-login-details`)
+        if (result?.code === DEVELOPMENT_CONFIG.statusCode) {
+            setUserLogDetail(result?.body)
+        } else {
+            setUserLogDetail([])
+        }
+    }
+
+    const formatDurationTime = (seconds = 0) => {
+        if (isNaN(seconds)) seconds = 0;
+
+        const h = Math.floor(seconds / 3600);
+        const m = Math.floor((seconds % 3600) / 60);
+        const s = seconds % 60;
+        return `${h}h ${m}m ${s}s`;
+    };
+
+    const formatTime = (time) => {
+        const date = new Date(time);
+        // return date.toLocaleTimeString('en-GB', {
+        return date.toLocaleDateString('en-GB', {
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit',
+            hour12: false,
+            weekday: 'short',
+            day: '2-digit',
+        })
+    };
+
+    const formatDate = (isoString) => {
+        const date = new Date(isoString);
+        return date.toLocaleDateString('en-GB', {
+            weekday: 'short',
+            day: '2-digit',
+            month: 'short',
+            // year: 'numeric',
+        }).replace(',', '');
+    };
+
+    let groupByMonth = userLogDetail?.reduce((acc, entry) => {
+        const entryDate = new Date(entry.login_time);
+        const monthKey = `${entryDate.getFullYear()}-${String(entryDate.getMonth() + 1).padStart(2, "0")}`;
+
+        const weekStart = new Date(entryDate);
+        weekStart.setDate(entryDate.getDate() - ((entryDate.getDay() + 6) % 7)); // monday
+        weekStart.setHours(0, 0, 0, 0);
+
+        const weekEnd = new Date(weekStart);
+        weekEnd.setDate(weekStart.getDate() + 6); // sunday
+
+        const weekKey = `${formatDate(weekStart)} - ${formatDate(weekEnd)}`;
+
+        if (!acc[monthKey]) acc[monthKey] = { weeks: {}, total: 0 };
+
+        if (!acc[monthKey].weeks[weekKey]) acc[monthKey].weeks[weekKey] = { entries: [], total: 0 };
+
+        acc[monthKey].weeks[weekKey].entries.push(entry);
+        acc[monthKey].weeks[weekKey].total += entry.session_duration;
+        // acc[monthKey].entries.push(entry);
+        acc[monthKey].total += entry.session_duration;
+
+        return acc;
+    }, {});
+
+    groupByMonth = Object.keys(groupByMonth)
+        .sort((a, b) => new Date(b) - new Date(a))
+        .reduce((acc, key) => {
+            acc[key] = groupByMonth[key];
+            return acc;
+        }, {});
+
+    useEffect(() => {
+        getNotification()
+        getUserDetail()
+        if (!!dashbordCID) {
+            getBoardUsers(dashbordCID)
+        }
+    }, [dashbordCID])
+
     return (
         <>
             <div
@@ -354,7 +435,7 @@ export default function Dashbord() {
                         </button>
                         {/*  USERS BOARD */}
                         {isBoardUsers && (
-                            <div className="absolute min-h-92 w-92 top-8 right-0 bg-white border rounded-lg shadow-md p-3">
+                            <div className="absolute min-h-96 w-96 top-8 left-10 bg-white border rounded-lg shadow-md p-3">
                                 <div className="flex items-center justify-between p-1 text-gray-700 text-lg border-b border-b-gray-300">
                                     <h3 className="">All Board Users</h3>
                                     <div className="flex items-center gap-2">
@@ -389,7 +470,7 @@ export default function Dashbord() {
 
                         {/* CHAT BOT */}
                         {!!isChatbox && (
-                            <div className="absolute min-h-92 w-92 top-8 right-0 bg-green-50 border border-green-200 rounded-lg shadow-md p-1">
+                            <div className="absolute min-h-96 w-96 top-8 left-10 bg-green-50 border border-green-200 rounded-lg shadow-md p-1">
                                 <div className="flex flex-col text-gray-600 gap-1 h-92">
                                     <div className="flex items-center justify-between p-1">
                                         <span className={`text-sm font-semibold`}>
@@ -483,7 +564,7 @@ export default function Dashbord() {
                             />
                         </button>
                         {isNotificationOpen && (
-                            <div className="absolute h-92 w-80 top-8 left-2 bg-white border rounded shadow-md p-3">
+                            <div className="absolute h-96 w-80 top-8 left-2 bg-white border rounded shadow-md p-3">
                                 <div className="flex items-center justify-between p-1 text-gray-700 text-lg border-b border-b-gray-300">
                                     <h3>Notifications</h3>
                                     <button
@@ -542,9 +623,68 @@ export default function Dashbord() {
                         <button className="hover:bg-[#948ab7] rounded p-1 w-6 cursor-pointer">
                             <CalendarDays size={15} strokeWidth={2.5} />
                         </button>
-                        <button className="hover:bg-[#948ab7] rounded p-1 w-6 cursor-pointer">
+                        <button
+                            className="hover:bg-[#948ab7] rounded p-1 w-6 cursor-pointer"
+                            onClick={handleToggleUserDetail}
+                        >
                             <Ellipsis size={15} strokeWidth={2.5} />
                         </button>
+                        {!!isUserLogDetail && (
+                            <div className="absolute h-96 w-md top-8 left-20 bg-white border rounded shadow-md p-3">
+                                <div className="flex items-center justify-between p-1 text-gray-700 text-lg border-b border-b-gray-400">
+                                    <p></p>
+                                    <h3>Login Details</h3>
+                                    <button
+                                        className="hover:bg-gray-300 rounded cursor-pointer p-1"
+                                        onClick={() => setIsUserLogDetail(false)}
+                                    >
+                                        <X size={18} />
+                                    </button>
+                                </div>
+                                {!!userLogDetail && userLogDetail?.length > 0 && (
+                                    <div className="text-gray-700 text-sm overflow-auto h-80">
+                                        <table className="w-full">
+                                            <thead className="border-b border-b-gray-300 text-gray-500">
+                                                <tr className="">
+                                                    <th className="px-3 py-2 text-left">LogIn Time</th>
+                                                    <th className="px-3 py-2 text-left">LogOut Time</th>
+                                                    <th className="px-3 py-2 text-left">Duration</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {groupByMonth && Object.entries(groupByMonth).map(([monthKey, data]) => (
+                                                    <React.Fragment key={monthKey}>
+                                                        <tr key={monthKey} className="text-xs border-b border-b-gray-300">
+                                                            <td colSpan="3" className="px-3 py-2 text-xs text-gray-500 font-semibold">
+                                                                {monthKey} {" - "} {formatDurationTime(data.total)}
+                                                            </td>
+                                                        </tr>
+                                                        {Object.entries(data?.weeks).map(([weekKey, weekData]) => (
+                                                            <React.Fragment key={weekKey}>
+                                                                <tr key={weekKey} className="text-xs border-b border-b-gray-300">
+                                                                    <td colSpan="3" className="px-3 py-2 text-xs text-gray-500 font-semibold">
+                                                                        {weekKey} {" - "} {formatDurationTime(weekData.total)}
+                                                                    </td>
+                                                                </tr>
+                                                                {weekData?.entries.map((value) => (
+                                                                    <tr key={value.id} className="text-xs border-b border-b-gray-300">
+                                                                        <td className="px-3 py-2 text-left">{formatTime(value.login_time)}</td>
+                                                                        <td className="px-3 py-2 text-left">{value.logout_time ? (formatTime(value.logout_time)) : ("Null")}</td>
+                                                                        <td className="px-3 py-2 text-left">{formatDurationTime(value.session_duration)}</td>
+                                                                    </tr>
+                                                                ))}
+                                                            </React.Fragment>
+                                                        ))}
+
+                                                    </React.Fragment>
+                                                ))}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                )}
+                            </div>
+                        )}
+
                     </div>
                 </div>
                 {/* CONTENT */}

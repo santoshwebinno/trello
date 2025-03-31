@@ -5,10 +5,11 @@ import apiHelper from "../helpers/api-helper";
 import DEVELOPMENT_CONFIG from "../helpers/config";
 import { toast } from "react-toastify";
 
-const Member = ({ setIsOpenJoinMember, setJoinedUser }) => {
+const Member = ({ card_id, setIsOpenJoinMember, setJoinedUser }) => {
     const { boardUsers, allJoinedUsers, setAllJoinedUsers } = useIndexContext();
 
     let dashbordCID = parseInt(localStorage.getItem("dashbordCID"), 10);
+    let loggedInUser = parseInt(localStorage.getItem("loggedInUser"), 10);
 
     const closeMemberBoard = () => {
         setIsOpenJoinMember(false)
@@ -36,21 +37,34 @@ const Member = ({ setIsOpenJoinMember, setJoinedUser }) => {
     const handleAddRemoveUser = async (e, user_id, user_name, is_join) => {
         e.preventDefault();
         let data = JSON.stringify({
-            c_id: 5,
+            c_id: card_id,
             user_id,
             user_name,
             is_join
         })
         let result = await apiHelper.postRequest(`add-remove-user?board_id=${dashbordCID}`, data)
         if (result?.code === DEVELOPMENT_CONFIG.statusCode) {
-            setAllJoinedUsers(prevUsers =>
-                prevUsers.map(user =>
-                    user.id === result?.body.id ? { ...user, is_join: result?.body.is_join } : user
-                )
-            );
-            setJoinedUser((prev) =>
-                prev.user_id === result?.body.user_id ? result?.body : prev
-            )
+            setAllJoinedUsers(prevUsers => {
+                if (!result?.body || !result?.body?.user_id) return prevUsers;
+                const userExists = prevUsers.some(user => user.user_id === result.body.user_id);
+                if (userExists) {
+                    return prevUsers.map(user =>
+                        user.user_id === result.body.user_id ? { ...user, is_join: result.body.is_join } : user
+                    );
+                } else {
+                    return [...prevUsers, result.body];
+                }
+            });
+            setJoinedUser((prev) => {
+                if (prev?.user_id === result?.body?.user_id) {
+                    return result?.body
+                }
+                else if (result?.body?.user_id === loggedInUser) {
+                    return result?.body
+                } else {
+                    return prev
+                }
+            })
         } else {
             error(result?.message)
         }

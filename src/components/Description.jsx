@@ -277,7 +277,7 @@ export default function Description() {
   useEffect(() => {
     getCardJoinedUser(childCardData?.id)
     getAllUsersJoinedCard(childCardData?.id)
-  }, [childCardData])
+  }, [childCardData?.id])
 
   // JOIN AND LEAVE SINGLE USER
   const handleJoinLeaveUser = async (e, c_id, is_join) => {
@@ -289,11 +289,17 @@ export default function Description() {
     let result = await apiHelper.postRequest("user-join-card", data)
     if (result?.code === DEVELOPMENT_CONFIG.statusCode) {
       setJoinedUser(result?.body)
-      setAllJoinedUsers(prevUsers =>
-        prevUsers.map(user =>
-          user.id === result?.body.id ? { ...user, is_join: result?.body.is_join } : user
-        )
-      );
+      setAllJoinedUsers(prevUsers => {
+        if (!result?.body || !result?.body?.user_id) return prevUsers;
+        const userExists = prevUsers.some(user => user.user_id === result.body.user_id);
+        if (userExists) {
+          return prevUsers.map(user =>
+            user.user_id === result.body.user_id ? { ...user, is_join: result.body.is_join } : user
+          );
+        } else {
+          return [...prevUsers, result.body];
+        }
+      });
     } else {
       setJoinedUser({})
     }
@@ -382,7 +388,7 @@ export default function Description() {
                       <div ref={popupRef}
                         className="absolute left-12 mt-16 text-gray-700 bg-white rounded-lg shadow-xl w-80 p-3 border border-gray-200"
                       >
-                        <Member setIsOpenJoinMember={setIsOpenJoinMember} setJoinedUser={setJoinedUser} />
+                        <Member card_id={childCardData?.id} setIsOpenJoinMember={setIsOpenJoinMember} setJoinedUser={setJoinedUser} />
                       </div>
                     }
                   </div>
@@ -570,7 +576,7 @@ export default function Description() {
                   ref={popupRef}
                   className="absolute text-gray-700 bg-white rounded-lg shadow-xl w-80 p-3 border border-gray-200"
                 >
-                  <Member setIsOpenJoinMember={setIsOpenJoinMember2} setJoinedUser={setJoinedUser} />
+                  <Member card_id={childCardData?.id} setIsOpenJoinMember={setIsOpenJoinMember2} setJoinedUser={setJoinedUser} />
                 </div>
               }
             </div>
