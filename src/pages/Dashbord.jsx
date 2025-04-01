@@ -687,8 +687,8 @@ export default function Dashbord() {
 
                     </div>
                 </div>
-                {/* CONTENT */}
 
+                {/* CONTENT */}
                 <div className="flex gap-4 mt-16 p-3 w-fit relative">
                     <DndContext onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
                         {!!dashbordDataObj &&

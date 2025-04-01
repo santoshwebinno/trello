@@ -132,6 +132,21 @@ export default function TaskCard({ id, values }) {
     // LOCAL STORAGE
   }
 
+  // Dynamic max height for overflow
+  const [maxHeight, setMaxHeight] = useState("384px");
+  const updateMaxHeight = () => {
+    const windowHeight = window.innerHeight;
+    const newMaxHeight = windowHeight * 0.63;
+    setMaxHeight(`${newMaxHeight}px`);
+  };
+  useEffect(() => {
+    updateMaxHeight();
+    window.addEventListener("resize", updateMaxHeight);
+    return () => {
+      window.removeEventListener("resize", updateMaxHeight);
+    };
+  }, []);
+
   return (
     <>
       {!isClose ? (
@@ -174,10 +189,13 @@ export default function TaskCard({ id, values }) {
 
           <div
             ref={scrollRef}
-            className="pb-1 pr-1 mb-1 flex-1 overflow-y-auto overflow-x-hidden max-h-96 custom-scrollbar"
+            className="pb-1 pr-1 mb-1 flex-1 overflow-y-auto overflow-x-hidden custom-scrollbar"
+            style={{
+              maxHeight: maxHeight,
+            }}
           >
             <div className="space-y-3 p-1">
-              {listCard && (
+              {listCard && listCard?.child_cards?.length > 0 && (
                 <>
                   {listCard?.child_cards?.map((item) => (
                     <ChildCard

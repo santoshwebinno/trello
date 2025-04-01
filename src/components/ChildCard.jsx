@@ -19,7 +19,7 @@ export default function ChildCard({ id, cardValues, displayDashbordCard }) {
       backgroundColor: "#E5E7EB",
       // border: "1px solid blue",
       zIndex: 1000,
-      position: "relative",
+      // position: "relative",
     }
     : undefined;
 
