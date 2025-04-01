@@ -127,8 +127,8 @@ export default function Description() {
         intervals[cardId] = setInterval(() => {
           setTimers((prevTimers) => {
             const newTime = (prevTimers[cardId]?.time ?? 0) + 1;
-            if (newTime % 20 === 0) {
-              // screenShot()
+            if (newTime % 60 === 0) {
+              screenShot()
             }
             return {
               ...prevTimers,
