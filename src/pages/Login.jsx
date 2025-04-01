@@ -77,9 +77,9 @@ export default function Login() {
         >
           Login
         </button>
-        {/* <p className="text-center text-sm text-gray-600">
-            Don't have an account? <Link to="/signup" className="text-blue-600 font-semibold">Sign Up</Link>
-        </p> */}
+        <p className="text-center text-sm text-gray-600">
+            Do not have an account? <Link to="/sign-up" className="text-blue-600 font-semibold">Sign Up</Link>
+        </p>
       </form>
       <ToastContainer rtl />
     </div>

@@ -142,20 +142,13 @@ export default function ChildCard({ id, cardValues, displayDashbordCard }) {
         <div className="flex items-center gap-1.5">
           {!!childCard?.is_checked && (
             <button
-              className="hidden group-hover:block cursor-pointer"
+              className="hidden group-hover:block cursor-pointer "
               onPointerDown={(e) => e.stopPropagation()}
               onClick={(e) => handleChildCardArchive(e)}
             >
               <Archive size={15} />
             </button>
           )}
-          <button
-            className="cursor-pointer"
-            onPointerDown={(e) => e.stopPropagation()}
-            onClick={handleButtonClick}
-          >
-            <FilePenLine size={15} />
-          </button>
         </div>
       </div>
       <div className="w-full px-2 flex items-center justify-between">

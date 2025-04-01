@@ -95,6 +95,7 @@ export default function Dashbord() {
     async function handleCreateDashbordCard(e) {
         e.preventDefault();
         if (!handleValidation()) {
+            setNewListCard(false)
             return
         }
         let data = JSON.stringify({
@@ -222,6 +223,7 @@ export default function Dashbord() {
     // CLOSE 3 POP-UPS
     const handleCloseAll = (e) => {
         if (!e.currentTarget.contains(e.relatedTarget)) {
+            setNewListCard(false)
             // setIsBoardUsers(false);
             // setIsNotificationOpen(false);
         }
@@ -421,13 +423,12 @@ export default function Dashbord() {
             >
                 {/* HEADER */}
                 <div className="fixed w-full flex items-center bg-[#50247e] p-3 border-t border-[#8d99b9] gap-2 z-1">
-                    <div className="flex items-center gap-2 relative" tabIndex={0} onBlur={handleCloseAll}>
+                    <div className="flex items-center gap-2">
                         <h1 className="text-lg font-bold cursor-pointer hover:bg-[#918ca555] inline-block p-1 px-2 rounded">
                             {dashbordDataObj.title || "Your Board"}
                         </h1>
-                        <button className="hover:bg-[#948ab7] rounded cursor-pointer p-2">
-                            <Star size={16} strokeWidth={2.5} />
-                        </button>
+                    </div>
+                    <div className="flex items-center gap-2 relative" tabIndex={0} onBlur={handleCloseAll}>
                         <button className="hover:bg-[#948ab7] rounded cursor-pointer p-2"
                             onClick={handleToggleBoardUsers}
                         >
@@ -435,7 +436,7 @@ export default function Dashbord() {
                         </button>
                         {/*  USERS BOARD */}
                         {isBoardUsers && (
-                            <div className="absolute min-h-96 w-96 top-8 left-10 bg-white border rounded-lg shadow-md p-3">
+                            <div className="absolute min-h-96 w-96 top-8 left-0 bg-white border rounded-lg shadow-md p-3">
                                 <div className="flex items-center justify-between p-1 text-gray-700 text-lg border-b border-b-gray-300">
                                     <h3 className="">All Board Users</h3>
                                     <div className="flex items-center gap-2">
@@ -470,7 +471,7 @@ export default function Dashbord() {
 
                         {/* CHAT BOT */}
                         {!!isChatbox && (
-                            <div className="absolute min-h-96 w-96 top-8 left-10 bg-green-50 border border-green-200 rounded-lg shadow-md p-1">
+                            <div className="absolute min-h-96 w-96 top-8 left-0 bg-green-50 border border-green-200 rounded-lg shadow-md p-1">
                                 <div className="flex flex-col text-gray-600 gap-1 h-92">
                                     <div className="flex items-center justify-between p-1">
                                         <span className={`text-sm font-semibold`}>
@@ -526,24 +527,6 @@ export default function Dashbord() {
                                 </div>
                             </div>
                         )}
-
-                        <button className="flex items-center gap-1 cursor-pointer text-sm font-semibold bg-amber-50 text-gray-700 px-2.5 py-2 rounded">
-                            <Columns2 size={15} strokeWidth={2.5} />
-                            <span className="">Board</span>
-                        </button>
-                        <ul>
-                            <li>
-                                <button className="flex items-center gap-1 hover:bg-[#948ab7] rounded cursor-pointer text-sm font-semibold text-white px-2.5 py-2">
-                                    <Table2 size={15} strokeWidth={2.5} />
-                                    <span className="">Table</span>
-                                </button>
-                            </li>
-                        </ul>
-                        <button className="hover:bg-[#948ab7] rounded cursor-pointer p-2">
-                            <ChevronDown size={15} strokeWidth={2.5} />
-                        </button>
-                    </div>
-                    <div className="flex items-center gap-2 relative" tabIndex={0} onBlur={handleCloseAll}>
                         <button className="flex hover:bg-[#948ab7] rounded p-1 w-6 cursor-pointer"
                             onClick={handleToggleNotifications}
                         >
@@ -564,7 +547,7 @@ export default function Dashbord() {
                             />
                         </button>
                         {isNotificationOpen && (
-                            <div className="absolute h-96 w-80 top-8 left-2 bg-white border rounded shadow-md p-3">
+                            <div className="absolute h-96 w-80 top-8 left-10 bg-white border rounded shadow-md p-3">
                                 <div className="flex items-center justify-between p-1 text-gray-700 text-lg border-b border-b-gray-300">
                                     <h3>Notifications</h3>
                                     <button
@@ -620,9 +603,6 @@ export default function Dashbord() {
                                 )}
                             </div>
                         )}
-                        <button className="hover:bg-[#948ab7] rounded p-1 w-6 cursor-pointer">
-                            <CalendarDays size={15} strokeWidth={2.5} />
-                        </button>
                         <button
                             className="hover:bg-[#948ab7] rounded p-1 w-6 cursor-pointer"
                             onClick={handleToggleUserDetail}
@@ -684,7 +664,6 @@ export default function Dashbord() {
                                 )}
                             </div>
                         )}
-
                     </div>
                 </div>
 
@@ -712,7 +691,7 @@ export default function Dashbord() {
                     {dashbordDataObj.id && (
                         <>
                             {newListCard ? (
-                                <div className="bg-white h-fit p-2 rounded-xl min-w-72 flex flex-col gap-2">
+                                <div className="bg-white h-fit p-2 rounded-xl min-w-72 flex flex-col gap-2" tabIndex={0} onBlur={handleCloseAll}>
                                     <textarea
                                         ref={listRef}
                                         value={newListTitle}

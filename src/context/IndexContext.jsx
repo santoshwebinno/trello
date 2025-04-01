@@ -132,22 +132,6 @@ export default function ContextProvider({ children }) {
         } else { }
     };
 
-    // LOGIN & LOGOUT TIME FUNCNALITY
-    const [isStartTime, setIsStartTime] = useState(false);
-    const [totalTime, setTotalTime] = useState(0);
-
-    useEffect(() => {
-        let interval
-        if (!!isStartTime) {
-            interval = setInterval(() => {
-                setTotalTime((prev) => prev + 1)
-            }, 1000)
-        } else {
-            clearInterval(interval)
-        }
-        return () => clearInterval(interval)
-    }, [isStartTime])
-
     return (
         <IndexContext.Provider
             value={{
@@ -159,7 +143,6 @@ export default function ContextProvider({ children }) {
                 childCardDetails, setChildCardDetails,
                 handleComplete,
                 handleUpdateChildCardTitle,
-                setIsStartTime, totalTime
             }}
         >
             {children}

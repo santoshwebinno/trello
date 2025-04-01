@@ -11,7 +11,7 @@ import { toast } from "react-toastify";
 const style = {
   position: "absolute",
   top: "50%",
-  left: "26.9%",
+  left: "29%",
   transform: "translate(-50%, -50%)",
   width: 305,
   bgcolor: "background.paper",

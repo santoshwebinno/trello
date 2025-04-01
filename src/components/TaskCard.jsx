@@ -147,6 +147,12 @@ export default function TaskCard({ id, values }) {
     };
   }, []);
 
+  const handleCloseAll = (e) => {
+    if (!e.currentTarget.contains(e.relatedTarget)) {
+      setAddCard(false)
+    }
+}
+
   return (
     <>
       {!isClose ? (
@@ -174,16 +180,16 @@ export default function TaskCard({ id, values }) {
                 }
               }}
             />
-            <div className="flex items-center gap-4">
+            <div className="flex items-center p-1 gap-4">
               <button
                 className="cursor-pointer"
                 onClick={(e) => handleUpdateMinMax(e)}
               >
                 <Minimize2 size={16} strokeWidth={2.5} className="rotate-45" />
               </button>
-              <button className="cursor-pointer">
+              {/* <button className="cursor-pointer">
                 <Ellipsis size={18} strokeWidth={2.5} />
-              </button>
+              </button> */}
             </div>
           </div>
 
@@ -209,7 +215,7 @@ export default function TaskCard({ id, values }) {
               )}
 
               {addCard && (
-                <div className="flex flex-col gap-2">
+                <div className="flex flex-col gap-2" tabIndex={0} onBlur={handleCloseAll}>
                   <textarea
                     ref={cardRef}
                     value={newValue}
@@ -247,18 +253,15 @@ export default function TaskCard({ id, values }) {
             className={`${addCard ? "hidden" : "flex"
               } items-center justify-between gap-2 pt-1`}
           >
-            <div className="hover:bg-[#d0d4db] py-2 rounded w-full">
+            <div className="w-full">
               <button
-                className="flex items-center px-0.5 gap-1.5 cursor-pointer w-full"
+                className="flex items-center px-0.5 gap-1.5 cursor-pointer w-full hover:bg-[#d0d4db] py-2 rounded"
                 onClick={handleOpenAddCard}
               >
-                <Plus size={18} strokeWidth={2} />
+                <Plus size={18} strokeWidth={3} />
                 <span className="text-sm font-semibold">Add a Card</span>
               </button>
             </div>
-            <button className="hover:bg-[#d0d4db] p-2 rounded cursor-pointer">
-              <BookCopy size={15} strokeWidth={2} />
-            </button>
           </div>
         </div>
       ) : (

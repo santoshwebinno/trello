@@ -145,57 +145,7 @@ export default function SideBar() {
                     <Plus size={20} strokeWidth={2.5} />
                   </button>
                 </li>
-                <li className="flex items-center gap-2 cursor-pointer p-0.5 rounded hover:bg-[#918ca555] w-full justify-between">
-                  <span className="flex items-center gap-2">
-                    <Settings size={18} />
-                    <span className="text-sm font-semibold">
-                      Workspace settings
-                    </span>
-                  </span>
-                  <button className="p-1 w-7">
-                    <ChevronDown size={20} strokeWidth={2.5} />
-                  </button>
-                </li>
               </ul>
-            </div>
-
-            <div className="">
-              <span className="text-xs uppercase text-gray-700 bg-white px-1 py-0.5 rounded-sm">
-                Premium
-              </span>
-              <div className="mt-2">
-                <div className="flex items-center justify-between group">
-                  <h2 className="text-sm font-semibold">Workspace Views</h2>
-                  <span className="flex items-center gap-1">
-                    <button className="opacity-0 group-hover:opacity-100 transition-opacity duration-200 hover:bg-[#948ab7] rounded p-1 w-7">
-                      <Ellipsis size={18} strokeWidth={2.5} />
-                    </button>
-                    <button className="hover:bg-[#948ab7] rounded p-1 w-7">
-                      <Plus size={20} strokeWidth={2.5} />
-                    </button>
-                  </span>
-                </div>
-                <ul className="mt-1 space-y-1">
-                  <li className="flex items-center gap-2 cursor-pointer p-0.5 rounded hover:bg-[#918ca555] w-full justify-between group">
-                    <span className="flex items-center gap-2">
-                      <Table2 size={18} />
-                      <span className="text-sm italic">Table</span>
-                    </span>
-                    <button className="opacity-0 group-hover:opacity-100 transition-opacity duration-200 hover:bg-[#948ab7] rounded p-1 w-7">
-                      <Ellipsis size={18} strokeWidth={2.5} />
-                    </button>
-                  </li>
-                  <li className="flex items-center gap-2 cursor-pointer p-0.5 rounded hover:bg-[#918ca555] w-full justify-between group">
-                    <span className="flex items-center gap-2">
-                      <CalendarDays size={18} />
-                      <span className="text-sm italic">Calendar</span>
-                    </span>
-                    <button className="opacity-0 group-hover:opacity-100 transition-opacity duration-200 hover:bg-[#948ab7] rounded p-1 w-7">
-                      <Ellipsis size={18} strokeWidth={2.5} />
-                    </button>
-                  </li>
-                </ul>
-              </div>
             </div>
 
             <div className="">
@@ -246,9 +196,6 @@ export default function SideBar() {
                           >
                             <Ellipsis size={18} strokeWidth={2.5} />
                           </button>
-                          <button className="hover:p-0.5">
-                            <Star size={20} strokeWidth={2.5} />
-                          </button>
                         </div>
                       </li>
                     ))}
@@ -262,7 +209,7 @@ export default function SideBar() {
                 </>
               )}
               <button
-                className="w-full bg-gray-400 py-1 rounded mt-2 hover:bg-gray-500"
+                className="w-full bg-gray-400 py-1 rounded mt-2 hover:bg-gray-500 cursor-pointer"
                 onClick={(e) => handleLogOut(e)}
               >
                 Log Out

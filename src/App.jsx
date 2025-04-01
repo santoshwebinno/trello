@@ -5,6 +5,7 @@ import Layout from './Layout'
 import Dashbord from './pages/Dashbord'
 import ContextProvider from './context/IndexContext'
 import Login from './pages/Login'
+import Signup from './pages/Signup'
 
 
 const isAuthenticated = () => {
@@ -28,6 +29,7 @@ const router = createBrowserRouter(
   createRoutesFromElements(
     <>
       <Route path="/" element={<PublicRoute element={<Login />} />} />
+      <Route path="/sign-up" element={<PublicRoute element={<Signup />} />} />
 
       <Route path="/dashbord" element={<PrivateRoute element={<Layout />} />}>
         <Route index element={<Dashbord />} />
