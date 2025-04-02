@@ -2,16 +2,11 @@ import React, { useCallback, useEffect, useRef, useState } from "react";
 import TaskCard from "../components/TaskCard";
 import {
     Bell,
-    CalendarDays,
-    ChevronDown,
-    Columns2,
     Ellipsis,
+    MessageCircleMore,
     MessagesSquare,
     Plus,
     SendHorizontal,
-    Star,
-    Table2,
-    UsersRound,
     X,
 } from "lucide-react";
 import apiHelper from "../helpers/api-helper";
@@ -22,7 +17,7 @@ import Description from "../components/Description";
 import { toast, ToastContainer } from "react-toastify";
 import ChildCard from "../components/ChildCard";
 import io from "socket.io-client"
-import ScrollToBottom, { useScrollToBottom, useSticky } from "react-scroll-to-bottom";
+import ScrollToBottom from "react-scroll-to-bottom";
 import { Badge } from "@mui/material";
 
 const socket = io.connect(DEVELOPMENT_CONFIG.base_url)
@@ -54,9 +49,6 @@ export default function Dashbord() {
     let dashbordCID = parseInt(localStorage.getItem("dashbordCID"), 10);
     let loggedInUser = parseInt(localStorage.getItem("loggedInUser"), 10);
 
-    // const scrollToBottom = useScrollToBottom()
-    // const [sticky] = useSticky();
-
     // OPEN AND CLOSE ADD LIST
     const handleNewListCardOpen = () => {
         setNewListCard(true);
@@ -78,10 +70,35 @@ export default function Dashbord() {
             });
     }
     const error = (msg) => {
-        toast.success(msg,
+        toast.error(msg,
             {
                 autoClose: 5000,
             });
+    }
+
+    const toastMessage = (data) => {
+        const toastId = toast.info(
+            <div className="w-full py-1">
+                <div className="flex flex-col items-center justify-between">
+                    <div className="w-full flex flex-col gap-2 self-start">
+                        <span className="text-sm text-gray-500 font-semibold">{data?.name}</span>
+                        <span className="text-xs text-gray-500 font-normal">{data?.message}</span>
+                    </div>
+                    <button className="w-16 p-1 mt-2 bg-gray-600 rounded text-white cursor-pointer self-end"
+                        onClick={() => {
+                            setIsNotificationOpen(true);
+                            toast.dismiss(toastId);
+                        }}
+                    >Open</button>
+                </div>
+            </div>,
+            {
+                autoClose: 5000,
+                position: "bottom-right",
+                hideProgressBar: true,
+                icon: false,
+            }
+        );
     }
 
     const handleValidation = () => {
@@ -168,6 +185,7 @@ export default function Dashbord() {
                 const notifications = data?.is_viewed ? 0 : 1;
                 setAllNotification((prev) => [data, ...prev]);
                 setNotificationCount((prev) => prev + notifications);
+                toastMessage(data)
             }
         });
 
@@ -220,12 +238,12 @@ export default function Dashbord() {
         }
     };
 
-    // CLOSE 3 POP-UPS
+    // CLOSE POP-UP
     const handleCloseAll = (e) => {
         if (!e.currentTarget.contains(e.relatedTarget)) {
             setNewListCard(false)
-            // setIsBoardUsers(false);
-            // setIsNotificationOpen(false);
+            setIsNotificationOpen(false);
+            setIsUserLogDetail(false);
         }
     }
 
@@ -413,7 +431,7 @@ export default function Dashbord() {
     return (
         <>
             <div
-                className="flex-1 overflow-auto overflow-y-hidden bg-[#8636a5]"
+                className="flex-1 flex flex-col overflow-auto overflow-y-hidden bg-[#8636a5]"
                 style={{
                     backgroundColor: dashbordDataObj?.bg_color?.startsWith("#")
                         ? dashbordDataObj?.bg_color
@@ -422,23 +440,24 @@ export default function Dashbord() {
                 }}
             >
                 {/* HEADER */}
-                <div className="fixed w-full flex items-center bg-[#50247e] p-3 border-t border-[#8d99b9] gap-2 z-1">
+                <div className="w-full flex items-center justify-between bg-[#50247e] p-3 border border-[#8d99b9] gap-2 z-1">
                     <div className="flex items-center gap-2">
                         <h1 className="text-lg font-bold cursor-pointer hover:bg-[#918ca555] inline-block p-1 px-2 rounded">
                             {dashbordDataObj.title || "Your Board"}
                         </h1>
                     </div>
-                    <div className="flex items-center gap-2 relative" tabIndex={0} onBlur={handleCloseAll}>
-                        <button className="hover:bg-[#948ab7] rounded cursor-pointer p-2"
+                    <div className="flex items-center gap-3 relative" tabIndex={0} onBlur={handleCloseAll}>
+                        <button className="flex items-center gap-2 bg-[#948ab7] hover:bg-[#6f6594] rounded cursor-pointer h-7 px-1"
                             onClick={handleToggleBoardUsers}
                         >
-                            <UsersRound size={16} strokeWidth={2.5} />
+                            <span>Chat</span>
+                            <MessageCircleMore size={16} strokeWidth={2.5} />
                         </button>
                         {/*  USERS BOARD */}
                         {isBoardUsers && (
-                            <div className="absolute min-h-96 w-96 top-8 left-0 bg-white border rounded-lg shadow-md p-3">
+                            <div className="absolute min-h-96 w-96 top-10 right-20 bg-white border rounded-lg shadow-md p-2">
                                 <div className="flex items-center justify-between p-1 text-gray-700 text-lg border-b border-b-gray-300">
-                                    <h3 className="">All Board Users</h3>
+                                    <h3 className="">Board Users</h3>
                                     <div className="flex items-center gap-2">
                                         <button
                                             className="flex items-center text-sm bg-gray-200 gap-1 hover:bg-gray-300 rounded cursor-pointer p-1"
@@ -471,7 +490,7 @@ export default function Dashbord() {
 
                         {/* CHAT BOT */}
                         {!!isChatbox && (
-                            <div className="absolute min-h-96 w-96 top-8 left-0 bg-green-50 border border-green-200 rounded-lg shadow-md p-1">
+                            <div className="absolute min-h-96 w-96 top-10 right-20 bg-green-50 border border-green-200 rounded-lg shadow-md p-1">
                                 <div className="flex flex-col text-gray-600 gap-1 h-92">
                                     <div className="flex items-center justify-between p-1">
                                         <span className={`text-sm font-semibold`}>
@@ -527,13 +546,14 @@ export default function Dashbord() {
                                 </div>
                             </div>
                         )}
-                        <button className="flex hover:bg-[#948ab7] rounded p-1 w-6 cursor-pointer"
+                        <button className="flex items-center hover:bg-[#948ab7] rounded h-7 px-2 cursor-pointer"
                             onClick={handleToggleNotifications}
                         >
                             <Bell size={15} strokeWidth={2.5} />
                             <Badge
                                 badgeContent={notificationCount}
                                 color="success"
+                                className="-top-2"
                                 sx={{
                                     "& .MuiBadge-badge": {
                                         backgroundColor: "green",
@@ -547,7 +567,7 @@ export default function Dashbord() {
                             />
                         </button>
                         {isNotificationOpen && (
-                            <div className="absolute h-96 w-80 top-8 left-10 bg-white border rounded shadow-md p-3">
+                            <div className="absolute h-96 w-80 top-10 right-10 bg-white border rounded shadow-md p-2">
                                 <div className="flex items-center justify-between p-1 text-gray-700 text-lg border-b border-b-gray-300">
                                     <h3>Notifications</h3>
                                     <button
@@ -604,14 +624,14 @@ export default function Dashbord() {
                             </div>
                         )}
                         <button
-                            className="hover:bg-[#948ab7] rounded p-1 w-6 cursor-pointer"
+                            className="hover:bg-[#948ab7] rounded h-7 px-2  cursor-pointer"
                             onClick={handleToggleUserDetail}
                         >
                             <Ellipsis size={15} strokeWidth={2.5} />
                         </button>
                         {!!isUserLogDetail && (
-                            <div className="absolute h-96 w-md top-8 left-20 bg-white border rounded shadow-md p-3">
-                                <div className="flex items-center justify-between p-1 text-gray-700 text-lg border-b border-b-gray-400">
+                            <div className="absolute h-96 w-md top-10 right-0 bg-white border rounded shadow-md p-2">
+                                <div className="flex items-center justify-between pb-1 text-gray-700 text-lg border-b border-b-gray-400">
                                     <p></p>
                                     <h3>Login Details</h3>
                                     <button
@@ -668,7 +688,7 @@ export default function Dashbord() {
                 </div>
 
                 {/* CONTENT */}
-                <div className="flex gap-4 mt-16 p-3 w-fit relative">
+                <div className="flex gap-4 p-3 w-fit relative">
                     <DndContext onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
                         {!!dashbordDataObj &&
                             dashbordDataObj?.dashbord_cards?.map((value) => (
@@ -740,7 +760,7 @@ export default function Dashbord() {
             </div >
 
             <Description />
-            <ToastContainer rtl />
+            <ToastContainer ltr />
         </>
     );
 }

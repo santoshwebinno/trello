@@ -36,7 +36,7 @@ function ChildModal({ openChild, setOpenChild, setOpen, boardData }) {
       });
   }
   const error = (msg) => {
-    toast.success(msg,
+    toast.error(msg,
       {
         autoClose: 5000,
       });

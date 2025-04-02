@@ -45,7 +45,7 @@ export default function TaskCard({ id, values }) {
       });
   }
   const error = (msg) => {
-    toast.success(msg,
+    toast.error(msg,
       {
         autoClose: 5000,
       });

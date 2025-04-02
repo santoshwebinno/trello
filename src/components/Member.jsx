@@ -20,6 +20,7 @@ const Member = ({ card_id, setIsOpenJoinMember, setJoinedUser }) => {
         return fName
     }
 
+    console.log("allJoinedUsers",allJoinedUsers)
     const joinedUsers = allJoinedUsers.filter(user => user.is_join);
 
     const boardUsersFiltered = boardUsers.filter(boardUser =>
@@ -27,7 +28,7 @@ const Member = ({ card_id, setIsOpenJoinMember, setJoinedUser }) => {
     );
 
     const error = (msg) => {
-        toast.success(msg,
+        toast.error(msg,
             {
                 autoClose: 5000,
             });

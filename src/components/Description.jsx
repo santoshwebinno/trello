@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useRef } from "react";
 import Box from "@mui/material/Box";
 import Modal from "@mui/material/Modal";
-import { CircleStop, Clock, Menu, Pause, Play, Plus, X, UserRoundPlus, UserRound, UserRoundMinus } from "lucide-react";
+import { CircleStop, Clock, Menu, Pause, Play, Plus, X, UserRoundPlus, UserRound, UserRoundMinus, Paperclip, Logs } from "lucide-react";
 import { useIndexContext } from "../context/IndexContext";
 import DEVELOPMENT_CONFIG from "../helpers/config";
 import apiHelper from "../helpers/api-helper";
@@ -22,6 +22,7 @@ export default function Description() {
     openDescription,
     setOpenDescription,
     childCardDetails,
+    setChildCardDetails,
     handleComplete,
     handleUpdateChildCardTitle,
     getBoards,
@@ -46,9 +47,13 @@ export default function Description() {
   });
   const [history, setHistory] = useState([]);
   const [totalTime, setTotalTime] = useState(0);
-  const [showHistory, setShowHistory] = useState(true);
 
-  const [timers, setTimers] = useState({});
+  const [timers, setTimers] = useState({
+    isRunning: false,
+    showTimer: false,
+    time: 0,
+    showHistory: false,
+  });
 
   useEffect(() => {
     setChildCardData(childCardDetails?.history);
@@ -59,6 +64,7 @@ export default function Description() {
   const username = childCardDetails?.user?.name.split(' ')[0];
   const firstLetter = username?.charAt(0);
 
+  // DESCRIPTION
   const [descriptionBoard, setDescriptionBoard] = useState(false);
   const handleOpenDescriptionBoard = async () => {
     setDescriptionBoard(true);
@@ -67,26 +73,25 @@ export default function Description() {
     setDescriptionBoard(false);
   };
 
-  const handleValidation = () => {
-    let isValid = true;
-    if (childCardData.description.trim() === "") {
-      isValid = false;
-    }
-    return isValid;
-  };
   // HANDLE UPDATE DESCRIPTION
   const handleUpdateDescription = async (e, id) => {
     e.preventDefault();
-    if (!handleValidation()) {
-      handleCloseDescriptionBoard();
+    if (!id) {
       return;
     }
     let data = JSON.stringify({
       c_id: id,
-      description: childCardData.description,
+      description: childCardData?.description,
     });
     let result = await apiHelper.postRequest("update-child-card-description", data);
     if (result?.code === DEVELOPMENT_CONFIG.statusCode) {
+      setChildCardDetails((prev) => ({
+        ...prev,
+        history: {
+          ...prev.history,
+          description: result?.body?.description
+        }
+      }))
       handleCloseDescriptionBoard();
     } else { }
   };
@@ -110,14 +115,13 @@ export default function Description() {
     }));
   };
   const handleHideShowHistory = (cardId) => {
-    setShowHistory(!showHistory)
-    // setTimers((prevTimers) => ({
-    //   ...prevTimers,
-    //   [cardId]: {
-    //     ...prevTimers[cardId],
-    //     showHistory: !prevTimers[cardId]?.showHistory,
-    //   },
-    // }));
+    setTimers((prevTimers) => ({
+      ...prevTimers,
+      [cardId]: {
+        ...prevTimers[cardId],
+        showHistory: !prevTimers[cardId]?.showHistory,
+      },
+    }));
   };
 
   useEffect(() => {
@@ -150,10 +154,10 @@ export default function Description() {
     setTimers((prevTimers) => ({
       ...prevTimers,
       [cardId]: {
+        ...prevTimers[cardId],
         isRunning: true,
         time: prevTimers[cardId]?.time ?? 0,
         showTimer: true,
-        // showHistory: true
       },
     }));
   };
@@ -189,8 +193,14 @@ export default function Description() {
     })
     let result = await apiHelper.postRequest("update-time", data)
     if (result?.code === DEVELOPMENT_CONFIG.statusCode) {
-      setHistory(result?.body?.history);
-      setTotalTime(result?.body?.totalTime);
+      setChildCardDetails((prev) => ({
+        ...prev,
+        history: {
+          ...prev.history,
+          child_card_times: result?.body?.history
+        },
+        totalTime: result?.body?.totalTime
+      }))
       setTimers((prevTimers) => ({
         ...prevTimers,
         [id]: {
@@ -237,6 +247,7 @@ export default function Description() {
     return fName
   }
 
+  // MEMBER MODAL
   const [isOpenJoinMember, setIsOpenJoinMember] = useState(false)
   const [joinedUser, setJoinedUser] = useState({})
 
@@ -275,8 +286,10 @@ export default function Description() {
   }
 
   useEffect(() => {
-    getCardJoinedUser(childCardData?.id)
-    getAllUsersJoinedCard(childCardData?.id)
+    if (childCardData?.id) {
+      getCardJoinedUser(childCardData?.id)
+      getAllUsersJoinedCard(childCardData?.id)
+    }
   }, [childCardData?.id])
 
   // JOIN AND LEAVE SINGLE USER
@@ -304,6 +317,17 @@ export default function Description() {
       setJoinedUser({})
     }
   }
+
+  // CARD MESSAGES
+  const [messageBoard, setMessageBoard] = useState(false);
+  const handleOpenMessageBoard = async () => {
+    setMessageBoard(true);
+  };
+  const handleCloseMessageBoard = async () => {
+    setMessageBoard(false);
+  };
+  const [message, setMessage] = useState("");
+
 
   return (
     <Modal
@@ -403,18 +427,31 @@ export default function Description() {
                 <div className="flex flex-col gap-4 w-full px-2">
                   <p className="text-base font-medium">Description</p>
                   {!descriptionBoard ? (
-                    <button
-                      className="bg-gray-200 rounded py-4 hover:bg-gray-300 cursor-pointer"
-                      onClick={handleOpenDescriptionBoard}
-                    >
-                      Add more detailed description
-                    </button>
+                    <>
+                      {childCardData?.description?.trim() === "" ? (
+                        < button
+                          className="bg-gray-200 rounded py-4 hover:bg-gray-300 cursor-pointer"
+                          onClick={handleOpenDescriptionBoard}
+                        >
+                          Add more detailed description
+                        </button>
+                      ) : (
+                        <>
+                          <p
+                            className="max-h-80 overflow-y-auto p-2 text-gray-700 break-words whitespace-pre-line"
+                            onClick={handleOpenDescriptionBoard}
+                          >
+                            {childCardData?.description}
+                          </p>
+                        </>
+                      )}
+                    </>
                   ) : (
                     <div>
                       <textarea
                         value={childCardData?.description}
                         placeholder="Enter some text here"
-                        className="w-full px-2 py-1 text-base font-medium resize-none outline-none overflow-hidden rounded border border-gray-500 focus:border-2 focus:border-blue-600"
+                        className="w-full min-h-64 px-2 py-1 text-base font-medium outline-none overflow-y-auto rounded border border-gray-500 focus:border-2 focus:border-blue-600"
                         onChange={(e) => {
                           setChildCardData((prev) => ({
                             ...prev,
@@ -451,7 +488,7 @@ export default function Description() {
                   <Clock size={20} />
                 </button>
                 <div className="flex flex-col gap-4 w-full px-2">
-                  <div className="flex justify-between items-center px-2">
+                  <div className="flex justify-between items-center">
                     <p className="text-base font-medium">Work Log</p>
                     <button className="bg-gray-200 text-sm rounded px-4 py-2 hover:bg-gray-300 cursor-pointer"
                       onClick={() => handleHideShowTimer(childCardData?.id)}
@@ -460,7 +497,7 @@ export default function Description() {
                     </button>
                   </div>
                   {!!timers[childCardData?.id]?.showTimer &&
-                    <div className="flex justify-between px-4 p-2 ">
+                    <div className="flex justify-between px-4 p-2">
                       <div className="text-lg text-gray-500 font-semibold space-x-4">
                         <span className="border-b-2 border-b-black ">{childCardData?.title}</span>
                         <span className="text-gray-600">
@@ -511,14 +548,14 @@ export default function Description() {
                         <button className="bg-gray-200 text-sm rounded px-4 py-2 hover:bg-gray-300 cursor-pointer"
                           onClick={() => handleHideShowHistory(childCardData?.id)}
                         >
-                          {showHistory ? "Hide" : "Show"} Details
+                          {timers[childCardData?.id]?.showHistory ? "Hide" : "Show"} Details
                         </button>
                       </div>
                     </div>
                   </div>
 
                   <div className="border-t border-gray-500 p-2">
-                    {showHistory && groupedHistory &&
+                    {timers[childCardData?.id]?.showHistory && groupedHistory &&
                       <ul className="flex flex-col gap-2">
                         {Object.entries(groupedHistory).map(([date, data]) => (
                           <div key={date}>
@@ -542,6 +579,81 @@ export default function Description() {
                   </div>
                 </div>
               </div>
+
+              {/* Attachments */}
+              <div className="flex items-start gap-2 w-full">
+                <button className="p-1">
+                  <Paperclip size={20} />
+                </button>
+                <div className="flex flex-col gap-4 w-full px-2">
+                  Attachments File
+                </div>
+              </div>
+
+              {/* Activity */}
+              <div className="flex items-start gap-2 w-full">
+                <button className="p-1">
+                  <Logs size={20} />
+                </button>
+                <div className="flex flex-col gap-4 w-full px-2">
+                  <div className="flex justify-between items-center">
+                    <p className="text-base font-medium">Activity</p>
+                    {/* <button className="bg-gray-200 text-sm rounded px-4 py-2 hover:bg-gray-300 cursor-pointer"
+                      onClick={() => handleHideShowTimer(childCardData?.id)}
+                    >
+                      {timers[childCardData?.id]?.showTimer ? "Hide" : "Show"} Details
+                    </button> */}
+                  </div>
+                </div>
+              </div>
+
+              {/* Messages */}
+              <div className="flex items-start gap-2 w-full">
+                <div className="w-10 h-9 flex items-center justify-center bg-yellow-500 font-bold rounded-full">
+                  {/* {extractFirst(value.name)} */}U
+                </div>
+
+                {!messageBoard ? (
+                  <div className="w-full border border-gray-300 rounded-lg flex items-center bg-white">
+                    <input
+                      type="text"
+                      placeholder="Write a comment..."
+                      className="w-full outline-none px-3 py-2 rounded-lg text-gray-600 placeholder-gray-600 bg-transparent"
+                      onClick={handleOpenMessageBoard}
+                    />
+                  </div>
+                ) : (
+                  <div className="w-full">
+                    <textarea
+                      value={message}
+                      placeholder="Write a comment..."
+                      className="w-full min-h-36 px-2 py-1 text-base font-medium outline-none overflow-y-auto rounded border border-gray-500 focus:border-2 focus:border-blue-600"
+                      onChange={(e) => {
+                        setMessage(e.target.value)
+                        e.target.style.height = "auto";
+                        e.target.style.height = e.target.scrollHeight + "px";
+                      }}
+                    />
+                    <div className="flex gap-2">
+                      <button
+                        className="border border-blue-700 text-white px-3 rounded bg-blue-600"
+                      // onClick={(e) => {
+                      //   handleUpdateDescription(e, childCardData?.id);
+                      // }}
+                      >
+                        Save
+                      </button>
+                      <button
+                        className="border px-2 rounded"
+                        onClick={handleCloseMessageBoard}
+                      >
+                        Cancle
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+
             </div>
 
             {/* CONTENT RIGHT */}

@@ -40,7 +40,7 @@ export default function CreateBoard({ open, setOpen }) {
       });
   }
   const error = (msg) => {
-    toast.success(msg,
+    toast.error(msg,
       {
         autoClose: 5000,
       });
