@@ -47,6 +47,7 @@ export default function Description() {
   });
   const [history, setHistory] = useState([]);
   const [totalTime, setTotalTime] = useState(0);
+  const [cardMessage, setCardMessage] = useState([]);
 
   const [timers, setTimers] = useState({
     isRunning: false,
@@ -59,6 +60,7 @@ export default function Description() {
     setChildCardData(childCardDetails?.history);
     setHistory(childCardDetails?.history?.child_card_times)
     setTotalTime(childCardDetails?.totalTime)
+    setCardMessage(childCardDetails?.history?.card_messages)
   }, [childCardDetails]);
 
   const username = childCardDetails?.user?.name.split(' ')[0];
@@ -328,6 +330,40 @@ export default function Description() {
   };
   const [message, setMessage] = useState("");
 
+  const handleSendMessage = async (e, id) => {
+    e.preventDefault();
+    if (!id || message.trim() == "") {
+      handleCloseMessageBoard();
+      return;
+    }
+    let data = JSON.stringify({
+      c_id: id,
+      message
+    })
+    let result = await apiHelper.postRequest("send-message-on-card", data)
+    if (result?.code === DEVELOPMENT_CONFIG.statusCode) {
+      setMessage("");
+      setChildCardDetails((prev) => ({
+        ...prev,
+        history: {
+          ...prev.history,
+          card_messages: [result?.body, ...prev.history.card_messages]
+        }
+      })) 
+    }
+  }
+
+  const formatTimeHistory = (time) => {
+    const date = new Date(time);
+    return date.toLocaleDateString('en-GB', {
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: true,
+      weekday: 'short',
+      day: '2-digit',
+      year: 'numeric',
+    })
+  };
 
   return (
     <Modal
@@ -609,7 +645,7 @@ export default function Description() {
 
               {/* Messages */}
               <div className="flex items-start gap-2 w-full">
-                <div className="w-10 h-9 flex items-center justify-center bg-yellow-500 font-bold rounded-full">
+                <div className="w-9 h-9 flex items-center justify-center bg-yellow-500 font-bold rounded-full">
                   {/* {extractFirst(value.name)} */}U
                 </div>
 
@@ -637,9 +673,9 @@ export default function Description() {
                     <div className="flex gap-2">
                       <button
                         className="border border-blue-700 text-white px-3 rounded bg-blue-600"
-                      // onClick={(e) => {
-                      //   handleUpdateDescription(e, childCardData?.id);
-                      // }}
+                        onClick={(e) => {
+                          handleSendMessage(e, childCardData?.id);
+                        }}
                       >
                         Save
                       </button>
@@ -653,6 +689,28 @@ export default function Description() {
                   </div>
                 )}
               </div>
+
+              {/* Messages History*/}
+              {!!cardMessage && cardMessage?.length > 0 && (
+                <div className="w-full">
+                  <ul className="flex flex-col gap-3 w-full">
+                    {cardMessage.map((value) => (
+                      <li key={value.id} className="flex items-start gap-2 w-full">
+                        <div className="w-8 h-8 flex items-center justify-center bg-yellow-500 font-bold rounded-full">
+                          {extractFirst(value.user_name)}
+                        </div>
+                        <div className="w-full text-sm">
+                          <div className="flex gap-2 items-center">
+                            <span className="text-black font-semibold">{value.user_name}</span>
+                            <span className="text-xs">{formatTimeHistory(value?.created_at)}</span>
+                          </div>
+                          <p className="w-full border border-gray-300 rounded-lg flex items-center bg-white px-2">{value.message}</p>
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
 
             </div>
 
