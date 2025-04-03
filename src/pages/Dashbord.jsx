@@ -265,7 +265,7 @@ export default function Dashbord() {
         let configData = {
             is_group: false,
             group_name: "",
-            board_id: "", // null
+            board_id: 0, // null
             group_users: [],
             user_2: value?.id,
         }
@@ -280,8 +280,8 @@ export default function Dashbord() {
             group_name: dashbordDataObj?.title,
             board_id: dashbordDataObj?.id,
             group_users: boardUsers,
-            user_1: "",
-            user_2: "",
+            user_1: 0, // null
+            user_2: 0, // null
         }
         setChatUserDetail({ name: dashbordDataObj?.title }) // group title
         await handleCreateChatRoom(e, configData)
