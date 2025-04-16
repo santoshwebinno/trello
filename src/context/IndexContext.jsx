@@ -97,8 +97,24 @@ export default function ContextProvider({ children }) {
                 ...prev,
                 history: {
                     ...prev.history,
-                    is_checked: newStatus,
+                    is_checked: result?.body?.is_checked,
                 },
+            }));
+            setDashbordDataObj((prev) => ({
+                ...prev,
+                dashbord_cards: prev.dashbord_cards.map((list) => {
+                    if (list.id === result?.body?.dashbord_c_id) {
+                        return {
+                            ...list,
+                            child_cards: list.child_cards.map((card) =>
+                                card.id === result?.body?.id
+                                    ? { ...card, is_checked: result?.body?.is_checked }
+                                    : card
+                            ),
+                        };
+                    }
+                    return list;
+                }),
             }));
         } else { }
     };
@@ -128,6 +144,22 @@ export default function ContextProvider({ children }) {
                     ...prev.history,
                     title: title,
                 },
+            }));
+            setDashbordDataObj((prev) => ({
+                ...prev,
+                dashbord_cards: prev.dashbord_cards.map((list) => {
+                    if (list.id === result?.body?.dashbord_c_id) {
+                        return {
+                            ...list,
+                            child_cards: list.child_cards.map((card) =>
+                                card.id === result?.body?.id
+                                    ? { ...card, title: result?.body?.title }
+                                    : card
+                            ),
+                        };
+                    }
+                    return list;
+                }),
             }));
         } else { }
     };

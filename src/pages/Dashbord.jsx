@@ -26,7 +26,7 @@ export default function Dashbord() {
     const [newListCard, setNewListCard] = useState(false);
     const [newListTitle, setNewListTitle] = useState("");
 
-    const { dashbordDataObj, handleOnDashbord, setBoardData, boardUsers, getBoardUsers } = useIndexContext();
+    const { dashbordDataObj, setDashbordDataObj, handleOnDashbord, setBoardData, boardUsers, getBoardUsers } = useIndexContext();
     const [activeCard, setActiveCard] = useState(null);
 
     const [allNotification, setAllNotification] = useState([])
@@ -108,6 +108,8 @@ export default function Dashbord() {
         }
         return isValid
     }
+
+    console.log("dashbordDataObj", dashbordDataObj)
     // CREATE DASHBORD CARD ( ADD LIST )
     async function handleCreateDashbordCard(e) {
         e.preventDefault();
@@ -123,7 +125,10 @@ export default function Dashbord() {
         if (result?.code === DEVELOPMENT_CONFIG.statusCode) {
             handleNewListCardClose()
             setNewListTitle("")
-            handleOnDashbord(dashbordDataObj?.id) // UPDATE CONTENT
+            setDashbordDataObj((prev) => ({
+                ...prev,
+                dashbord_cards: [...prev?.dashbord_cards, { ...result?.body, child_cards: [] }],
+            }));
             success(result.message)
         } else {
             error(result.message)

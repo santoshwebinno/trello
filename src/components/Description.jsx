@@ -26,6 +26,7 @@ export default function Description() {
     handleComplete,
     handleUpdateChildCardTitle,
     getBoards,
+    setDashbordDataObj,
     allJoinedUsers,
     setAllJoinedUsers,
     getAllUsersJoinedCard,
@@ -33,7 +34,7 @@ export default function Description() {
 
   // CLOSE DESCRIPTION MODAL
   const handleClose = () => {
-    getBoards(); //OR update dashbord_c_id=ID
+    // getBoards(); //OR update dashbord_c_id=ID
     setOpenDescription(false);
   };
 
@@ -315,6 +316,37 @@ export default function Description() {
           return [...prevUsers, result.body];
         }
       });
+      setDashbordDataObj((prev) => ({
+        ...prev,
+        dashbord_cards: prev.dashbord_cards.map((list) => ({
+          ...list,
+          child_cards: list.child_cards.map((card) => {
+            if (card.id !== result?.body?.c_id) return card;
+
+            // Update existing users
+            let updatedUsers = card.joined_card_users.map((prevUser) => {
+              if (prevUser.user_id === result.body.user_id) {
+                return { ...prevUser, is_join: result.body.is_join };
+              }
+              return prevUser;
+            });
+
+            // Add new user if not present
+            const userExists = card.joined_card_users.some(
+              (user) => user.user_id === result.body.user_id
+            );
+
+            if (!userExists && result?.body?.user_id) {
+              updatedUsers = [...updatedUsers, result.body];
+            }
+
+            return {
+              ...card,
+              joined_card_users: updatedUsers,
+            };
+          }),
+        })),
+      }));
     } else {
       setJoinedUser({})
     }
@@ -349,7 +381,7 @@ export default function Description() {
           ...prev.history,
           card_messages: [result?.body, ...prev.history.card_messages]
         }
-      })) 
+      }))
     }
   }
 

@@ -6,7 +6,7 @@ import DEVELOPMENT_CONFIG from "../helpers/config";
 import { toast } from "react-toastify";
 
 const Member = ({ card_id, setIsOpenJoinMember, setJoinedUser }) => {
-    const { boardUsers, allJoinedUsers, setAllJoinedUsers } = useIndexContext();
+    const { setDashbordDataObj, boardUsers, allJoinedUsers, setAllJoinedUsers } = useIndexContext();
 
     let dashbordCID = parseInt(localStorage.getItem("dashbordCID"), 10);
     let loggedInUser = parseInt(localStorage.getItem("loggedInUser"), 10);
@@ -20,7 +20,6 @@ const Member = ({ card_id, setIsOpenJoinMember, setJoinedUser }) => {
         return fName
     }
 
-    console.log("allJoinedUsers",allJoinedUsers)
     const joinedUsers = allJoinedUsers.filter(user => user.is_join);
 
     const boardUsersFiltered = boardUsers.filter(boardUser =>
@@ -66,6 +65,37 @@ const Member = ({ card_id, setIsOpenJoinMember, setJoinedUser }) => {
                     return prev
                 }
             })
+            setDashbordDataObj((prev) => ({
+                ...prev,
+                dashbord_cards: prev.dashbord_cards.map((list) => ({
+                    ...list,
+                    child_cards: list.child_cards.map((card) => {
+                        if (card.id !== result?.body?.c_id) return card;
+
+                        // Update existing users
+                        let updatedUsers = card.joined_card_users.map((prevUser) => {
+                            if (prevUser.user_id === result.body.user_id) {
+                                return { ...prevUser, is_join: result.body.is_join };
+                            }
+                            return prevUser;
+                        });
+
+                        // Add new user if not present
+                        const userExists = card.joined_card_users.some(
+                            (user) => user.user_id === result.body.user_id
+                        );
+
+                        if (!userExists && result?.body?.user_id) {
+                            updatedUsers = [...updatedUsers, result.body];
+                        }
+
+                        return {
+                            ...card,
+                            joined_card_users: updatedUsers,
+                        };
+                    }),
+                })),
+            }));
         } else {
             error(result?.message)
         }

@@ -12,8 +12,10 @@ import apiHelper from "../helpers/api-helper";
 import DEVELOPMENT_CONFIG from "../helpers/config";
 import { useDroppable } from "@dnd-kit/core";
 import { toast } from "react-toastify";
+import { useIndexContext } from "../context/IndexContext";
 
 export default function TaskCard({ id, values }) {
+  const { setDashbordDataObj } = useIndexContext();
   const [isClose, setIsClose] = useState(false);
 
   const [addCard, setAddCard] = useState(false);
@@ -54,15 +56,6 @@ export default function TaskCard({ id, values }) {
   const [newValue, setNewValue] = useState("");
   const [listCard, setListCard] = useState({});
 
-  // GET CHILD CARDS ( WHEN NEW CARD IS CREATED )
-  async function displayDashbordCard(id) {
-    let result = await apiHelper.getRequest(`display-dashbord-card?dashbord_c_id=${id}`);
-    if (result?.code === DEVELOPMENT_CONFIG.statusCode) {
-      setListCard(result?.body);
-    } else {
-      setListCard({});
-    }
-  }
   useEffect(() => {
     setListCard(values);
   }, [values]);
@@ -91,7 +84,18 @@ export default function TaskCard({ id, values }) {
     if (result?.code === DEVELOPMENT_CONFIG.statusCode) {
       handleCloseAddCard();
       setNewValue("");
-      displayDashbordCard(id); // UPDATE CONTENT
+      setDashbordDataObj((prev) => ({
+        ...prev,
+        dashbord_cards: prev.dashbord_cards.map((list) => {
+          if (list.id === result?.body?.dashbord_c_id) {
+            return {
+              ...list,
+              child_cards: [...list?.child_cards, { ...result?.body, joined_card_users: [] }],
+            };
+          }
+          return list;
+        }),
+      }));
       success(result.message)
     } else {
       error(result.message)
@@ -117,10 +121,18 @@ export default function TaskCard({ id, values }) {
     });
     let result = await apiHelper.postRequest("update-dashbord-card", data);
     if (result?.code === DEVELOPMENT_CONFIG.statusCode) {
-      // setListCard((prev) => ({
-      //   ...prev,
-      //   title: listCard.title,
-      // }));
+      setDashbordDataObj((prev) => ({
+        ...prev,
+        dashbord_cards: prev.dashbord_cards?.map((list) => {
+          if (list.id === result?.body?.id) {
+            return {
+              ...list,
+              title: result?.body?.title,
+            };
+          }
+          return list;
+        }),
+      }));
     } else { }
   };
 
@@ -151,7 +163,7 @@ export default function TaskCard({ id, values }) {
     if (!e.currentTarget.contains(e.relatedTarget)) {
       setAddCard(false)
     }
-}
+  }
 
   return (
     <>
@@ -208,7 +220,6 @@ export default function TaskCard({ id, values }) {
                       key={item.id}
                       id={item.id}
                       cardValues={item}
-                      displayDashbordCard={displayDashbordCard}
                     />
                   ))}
                 </>

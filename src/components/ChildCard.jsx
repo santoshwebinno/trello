@@ -1,12 +1,12 @@
-import { Archive, FilePenLine, Menu } from "lucide-react";
+import { Archive, Menu } from "lucide-react";
 import React, { useEffect, useState, useRef } from "react";
 import apiHelper from "../helpers/api-helper";
 import DEVELOPMENT_CONFIG from "../helpers/config";
 import { useDraggable } from "@dnd-kit/core";
 import { useIndexContext } from "../context/IndexContext";
 
-export default function ChildCard({ id, cardValues, displayDashbordCard }) {
-  const { handleOpenDescriptionModal } = useIndexContext();
+export default function ChildCard({ id, cardValues }) {
+  const { setDashbordDataObj, handleOpenDescriptionModal } = useIndexContext();
 
   const { attributes, listeners, setNodeRef, transform } = useDraggable({
     id,
@@ -42,7 +42,23 @@ export default function ChildCard({ id, cardValues, displayDashbordCard }) {
     if (result?.code === DEVELOPMENT_CONFIG.statusCode) {
       setChildCard((prev) => ({
         ...prev,
-        is_checked: newStatus,
+        is_checked: result?.body?.is_checked,
+      }));
+      setDashbordDataObj((prev) => ({
+        ...prev,
+        dashbord_cards: prev.dashbord_cards.map((list) => {
+          if (list.id === result?.body?.dashbord_c_id) {
+            return {
+              ...list,
+              child_cards: list.child_cards.map((card) =>
+                card.id === result?.body?.id
+                  ? { ...card, is_checked: result?.body?.is_checked }
+                  : card
+              ),
+            };
+          }
+          return list;
+        }),
       }));
     }
   };
@@ -57,8 +73,27 @@ export default function ChildCard({ id, cardValues, displayDashbordCard }) {
     });
     let result = await apiHelper.postRequest("child-card-archive", data);
     if (result?.code === DEVELOPMENT_CONFIG.statusCode) {
-      // UPDATE CONTENT AFTER ARCHIVED
-      displayDashbordCard(result?.body?.dashbord_c_id);
+      setDashbordDataObj((prev) => ({
+        ...prev,
+        dashbord_cards: prev.dashbord_cards.map((list) => {
+          if (list.id === result?.body?.dashbord_c_id) {
+            return {
+              ...list,
+              child_cards: list.child_cards
+                .filter(
+                  (card) =>
+                    card.id !== result?.body?.id || !result?.body?.is_archive
+                )
+                .map((card) =>
+                  card.id === result?.body?.id
+                    ? { ...card, is_archive: result?.body?.is_archive }
+                    : card
+                ),
+            };
+          }
+          return list;
+        }),
+      }));
     }
   };
 
