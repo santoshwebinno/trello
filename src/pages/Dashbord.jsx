@@ -109,7 +109,6 @@ export default function Dashbord() {
         return isValid
     }
 
-    console.log("dashbordDataObj", dashbordDataObj)
     // CREATE DASHBORD CARD ( ADD LIST )
     async function handleCreateDashbordCard(e) {
         e.preventDefault();
@@ -279,7 +278,7 @@ export default function Dashbord() {
     }
 
     const handleGroupChat = async (e) => {
-        if (!boardUsers?.length > 0) return // object
+        if (!boardUsers?.length > 0) return 
         let configData = {
             is_group: true,
             group_name: dashbordDataObj?.title,

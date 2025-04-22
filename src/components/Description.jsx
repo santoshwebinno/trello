@@ -1,11 +1,12 @@
 import React, { useEffect, useState, useRef } from "react";
 import Box from "@mui/material/Box";
 import Modal from "@mui/material/Modal";
-import { CircleStop, Clock, Menu, Pause, Play, Plus, X, UserRoundPlus, UserRound, UserRoundMinus, Paperclip, Logs } from "lucide-react";
+import { CircleStop, Clock, Menu, Pause, Play, Plus, X, UserRoundPlus, UserRound, UserRoundMinus, Paperclip, Logs, Eclipse } from "lucide-react";
 import { useIndexContext } from "../context/IndexContext";
 import DEVELOPMENT_CONFIG from "../helpers/config";
 import apiHelper from "../helpers/api-helper";
 import Member from "./Member";
+import { socket } from "../pages/Dashbord";
 
 const style = {
   position: "absolute",
@@ -50,11 +51,9 @@ export default function Description() {
   const [totalTime, setTotalTime] = useState(0);
   const [cardMessage, setCardMessage] = useState([]);
 
-  const [timers, setTimers] = useState({
-    isRunning: false,
-    showTimer: false,
-    time: 0,
-    showHistory: false,
+  const [timers, setTimers] = useState(() => {
+    const saved = localStorage.getItem("timers")
+    return saved ? JSON.parse(saved) : {}
   });
 
   useEffect(() => {
@@ -109,22 +108,31 @@ export default function Description() {
   }
 
   const handleHideShowTimer = (cardId) => {
-    setTimers((prevTimers) => ({
-      ...prevTimers,
-      [cardId]: {
-        ...prevTimers[cardId],
-        showTimer: !prevTimers[cardId]?.showTimer,
-      },
-    }));
+    setTimers((prevTimers) => {
+      const updatedTimers = {
+        ...prevTimers,
+        [cardId]: {
+          ...prevTimers[cardId],
+          showTimer: !prevTimers[cardId]?.showTimer,
+        },
+      }
+      localStorage.setItem('timers', JSON.stringify(updatedTimers)); // save time to ls
+      return updatedTimers;
+    }
+    );
   };
   const handleHideShowHistory = (cardId) => {
-    setTimers((prevTimers) => ({
-      ...prevTimers,
-      [cardId]: {
-        ...prevTimers[cardId],
-        showHistory: !prevTimers[cardId]?.showHistory,
-      },
-    }));
+    setTimers((prevTimers) => {
+      const updatedTimers = {
+        ...prevTimers,
+        [cardId]: {
+          ...prevTimers[cardId],
+          showHistory: !prevTimers[cardId]?.showHistory,
+        },
+      }
+      localStorage.setItem('timers', JSON.stringify(updatedTimers)); // save time to ls
+      return updatedTimers;
+    });
   };
 
   useEffect(() => {
@@ -137,13 +145,16 @@ export default function Description() {
             if (newTime % 60 === 0) {
               screenShot()
             }
-            return {
+            const updatedTimers = {
               ...prevTimers,
               [cardId]: {
                 ...prevTimers[cardId],
                 time: newTime
               },
             }
+
+            localStorage.setItem('timers', JSON.stringify(updatedTimers)); // save time to ls
+            return updatedTimers;
           });
         }, 1000);
       }
@@ -166,14 +177,18 @@ export default function Description() {
   };
 
   const handlePlayPause = (cardId) => {
-    setTimers((prevTimers) => ({
-      ...prevTimers,
-      [cardId]: {
-        ...prevTimers[cardId],
-        isRunning: !prevTimers[cardId]?.isRunning,
-        time: prevTimers[cardId]?.time ?? 0,
-      },
-    }));
+    setTimers((prevTimers) => {
+      const updatedTimers = {
+        ...prevTimers,
+        [cardId]: {
+          ...prevTimers[cardId],
+          isRunning: !prevTimers[cardId]?.isRunning,
+          time: prevTimers[cardId]?.time ?? 0,
+        }
+      }
+      localStorage.setItem('timers', JSON.stringify(updatedTimers)); // save time to ls
+      return updatedTimers;
+    });
   };
 
   const formatTime = (seconds = 0) => {
@@ -204,25 +219,33 @@ export default function Description() {
         },
         totalTime: result?.body?.totalTime
       }))
-      setTimers((prevTimers) => ({
-        ...prevTimers,
-        [id]: {
-          ...prevTimers[id],
-          isRunning: false,
-          time: 0,
-          showTimer: false
-        },
-      }));
+      setTimers((prevTimers) => {
+        const updatedTimers = {
+          ...prevTimers,
+          [id]: {
+            ...prevTimers[id],
+            isRunning: false,
+            time: 0,
+            showTimer: false
+          },
+        }
+        localStorage.setItem('timers', JSON.stringify(updatedTimers)); // save time to ls
+        return updatedTimers;
+      });
     } else {
-      setTimers((prevTimers) => ({
-        ...prevTimers,
-        [id]: {
-          ...prevTimers[id],
-          isRunning: false,
-          time: 0,
-          showTimer: false // check
-        },
-      }));
+      setTimers((prevTimers) => {
+        const updatedTimers = {
+          ...prevTimers,
+          [id]: {
+            ...prevTimers[id],
+            isRunning: false,
+            time: 0,
+            showTimer: false // check
+          },
+        }
+        localStorage.setItem('timers', JSON.stringify(updatedTimers)); // save time to ls
+        return updatedTimers;
+      });
     }
   }
 
@@ -353,19 +376,38 @@ export default function Description() {
   }
 
   // CARD MESSAGES
-  const [messageBoard, setMessageBoard] = useState(false);
-  const handleOpenMessageBoard = async () => {
-    setMessageBoard(true);
+  const [messageBoard, setMessageBoard] = useState({});
+  
+  const handleOpenMessageBoard = async (cardId) => {
+    setMessageBoard((prevStatus) => {
+      const updatedStatus = {
+        ...prevStatus,
+        [cardId]: {
+          ...prevStatus[cardId],
+          isMessage: true
+        }
+      }
+      return updatedStatus;
+    });
   };
-  const handleCloseMessageBoard = async () => {
-    setMessageBoard(false);
+  const handleCloseMessageBoard = async (cardId) => {
+    setMessageBoard((prevStatus) => {
+      const updatedStatus = {
+        ...prevStatus,
+        [cardId]: {
+          ...prevStatus[cardId],
+          isMessage: false
+        }
+      }
+      return updatedStatus;
+    });
   };
   const [message, setMessage] = useState("");
 
   const handleSendMessage = async (e, id) => {
     e.preventDefault();
     if (!id || message.trim() == "") {
-      handleCloseMessageBoard();
+      handleCloseMessageBoard(id);
       return;
     }
     let data = JSON.stringify({
@@ -375,15 +417,28 @@ export default function Description() {
     let result = await apiHelper.postRequest("send-message-on-card", data)
     if (result?.code === DEVELOPMENT_CONFIG.statusCode) {
       setMessage("");
-      setChildCardDetails((prev) => ({
-        ...prev,
-        history: {
-          ...prev.history,
-          card_messages: [result?.body, ...prev.history.card_messages]
-        }
-      }))
+      await socket.emit("send_message_on_card", result?.body);
     }
   }
+
+  // RECEIVE CARD MESSAGE SOCKET
+  useEffect(() => {
+    socket.on("receive_message_on_card", (data) => {
+      if (data.c_id == childCardData?.id) {
+        setChildCardDetails((prev) => ({
+          ...prev,
+          history: {
+            ...prev.history,
+            card_messages: [data, ...prev.history.card_messages]
+          }
+        }))
+      }
+    });
+
+    return () => {
+      socket.off("receive_message_on_card");
+    };
+  }, [childCardData?.id]);
 
   const formatTimeHistory = (time) => {
     const date = new Date(time);
@@ -681,13 +736,13 @@ export default function Description() {
                   {/* {extractFirst(value.name)} */}U
                 </div>
 
-                {!messageBoard ? (
+                {!messageBoard[childCardData?.id]?.isMessage ? (
                   <div className="w-full border border-gray-300 rounded-lg flex items-center bg-white">
                     <input
                       type="text"
                       placeholder="Write a comment..."
                       className="w-full outline-none px-3 py-2 rounded-lg text-gray-600 placeholder-gray-600 bg-transparent"
-                      onClick={handleOpenMessageBoard}
+                      onClick={() => handleOpenMessageBoard(childCardData?.id)}
                     />
                   </div>
                 ) : (
@@ -713,7 +768,7 @@ export default function Description() {
                       </button>
                       <button
                         className="border px-2 rounded"
-                        onClick={handleCloseMessageBoard}
+                        onClick={() => handleCloseMessageBoard(childCardData?.id)}
                       >
                         Cancle
                       </button>
